@@ -1,0 +1,249 @@
+{
+  "schema_version": "20260923-evidence-repair",
+  "date": "2026-09-23",
+  "input_archive_sha256": "7b914061b4e0938fb33c5b5e39c44761089447501ad85a261eeec9fb0af06a36",
+  "root_entries": [
+    "CURRENT-STATE.md",
+    "artifact",
+    "paper",
+    "research-plan.md"
+  ],
+  "file_count": 248,
+  "directory_count_including_root": 41,
+  "manifest_rows_excluding_self": 247,
+  "author_plan": {
+    "slots": 6,
+    "named": 3,
+    "blank_positions": [
+      4,
+      5,
+      6
+    ],
+    "order": [
+      "Haoyi Zhang",
+      "Huaijin Ran",
+      "Xunzhu Tang"
+    ],
+    "status": "INCOMPLETE_AUTHOR_ROSTER_DRAFT_ONLY"
+  },
+  "current_scientific_evidence": {
+    "bootstrap": {
+      "median": 0.9583333333333334,
+      "minimum": 0.6,
+      "nonempty_out_of_bag": 10000,
+      "perfect": 1884,
+      "replicates": 10000,
+      "seed": 20260923,
+      "selection_counts": {
+        "MR02": 10000,
+        "MR04": 10000,
+        "MR05": 379,
+        "MR06": 9688,
+        "MR07": 9700,
+        "MR10": 10000,
+        "MR11": 9999,
+        "MR12": 9614,
+        "MR13": 9611,
+        "MR14": 9626
+      },
+      "suite_size_median": 9.0
+    },
+    "clean": {
+      "SATISFIED": 756
+    },
+    "clean_rows": 756,
+    "defect_rows": 18144,
+    "defect_verdicts": {
+      "INADMISSIBLE": 1008,
+      "INCONSISTENT": 4266,
+      "SATISFIED": 12870
+    },
+    "design_exposed": 69,
+    "design_units": 72,
+    "direct_exclusive_units": 594,
+    "legacy_transitions": [
+      {
+        "evidence_gated": "INADMISSIBLE",
+        "legacy": "FAIL",
+        "rows": 468
+      },
+      {
+        "evidence_gated": "INCONSISTENT",
+        "legacy": "FAIL",
+        "rows": 3996
+      },
+      {
+        "evidence_gated": "INADMISSIBLE",
+        "legacy": "PASS",
+        "rows": 540
+      },
+      {
+        "evidence_gated": "INCONSISTENT",
+        "legacy": "PASS",
+        "rows": 270
+      },
+      {
+        "evidence_gated": "SATISFIED",
+        "legacy": "PASS",
+        "rows": 13626
+      }
+    ],
+    "matrix_sha256": "f9b77a0e93ea0ba33878d6ac088d4ed33e3919a16102ef91c721994731e19264",
+    "protocol": "evidence-gated-v1",
+    "reasons": {
+      "carrier_removed": 54,
+      "integrity_corruption_established": 36,
+      "requested_branches_executed": 270,
+      "source_carrier_valid": 108,
+      "source_payload_recovered": 540
+    },
+    "rerun": {
+      "all_durations_positive": true,
+      "compared_fields": [
+        "host",
+        "host_sha256",
+        "carrier",
+        "defect_id",
+        "relation_id",
+        "verdict",
+        "exposed",
+        "reason",
+        "phase",
+        "admission_json",
+        "observations_json"
+      ],
+      "differences": 0,
+      "examples": [],
+      "field_comparisons": 207900,
+      "first_sha256": "f9b77a0e93ea0ba33878d6ac088d4ed33e3919a16102ef91c721994731e19264",
+      "identical_key_sets": true,
+      "rerun_rows": 18900,
+      "rows": 18900,
+      "second_sha256": "fffdc3c3a87fb9924465a9e5833e0024961836310e0664b53ed3d5dda431aab7",
+      "verdict": "PASS"
+    },
+    "rows": 18900,
+    "run_timing": {
+      "maximum": 0.535664,
+      "median": 0.07228499999999999
+    },
+    "subject_replay": {
+      "killsets": 1224,
+      "killsets_equal": 1224,
+      "matches": 17136,
+      "rows": 17136
+    },
+    "suites": [
+      {
+        "design_exposed": 21,
+        "design_units": 72,
+        "expanded_exposed": 378,
+        "expanded_units": 1296,
+        "expanded_units_with_admitted_case": 1296,
+        "suite": "round_trip"
+      },
+      {
+        "design_exposed": 27,
+        "design_units": 72,
+        "expanded_exposed": 486,
+        "expanded_units": 1296,
+        "expanded_units_with_admitted_case": 1296,
+        "suite": "host_semantics"
+      },
+      {
+        "design_exposed": 33,
+        "design_units": 72,
+        "expanded_exposed": 594,
+        "expanded_units": 1296,
+        "expanded_units_with_admitted_case": 1296,
+        "suite": "compiler_differential"
+      },
+      {
+        "design_exposed": 69,
+        "design_units": 72,
+        "expanded_exposed": 1242,
+        "expanded_units": 1296,
+        "expanded_units_with_admitted_case": 1296,
+        "suite": "complete_catalog"
+      }
+    ],
+    "unit_count": 1296,
+    "units_exposed": 1242,
+    "units_with_admitted_case": 1296,
+    "unrevealed_operators": [
+      "M15"
+    ],
+    "zero_sensitivity_classes": [
+      "authentication",
+      "configuration",
+      "integrity",
+      "semantic corruption",
+      "transformation"
+    ],
+    "zero_sensitivity_operators": [
+      "M06",
+      "M15",
+      "M16",
+      "M20",
+      "M21",
+      "M22",
+      "M23",
+      "M24"
+    ]
+  },
+  "tests": {
+    "executed": 38,
+    "verdict": "PASS"
+  },
+  "recheck": {
+    "executed": 72,
+    "verdict": "PASS"
+  },
+  "paper_layout": {
+    "schema_version": "20260923-measured",
+    "pdf_sha256": "464cba06fe03c1b98bb3c6975434552b9ea549ad5d753d7cba1ba5883fa833f7",
+    "source_sha256": "94d2edaf9a93f6e0a935d429ee73d93d05ea0119b027d5de34f8339574d2aa20",
+    "template_sha256": "2f949e6e3f2a79f2cdc218b9dcdbaa7dd451adb4ee0be1af6dc7ebe00b318ea7",
+    "body_pages": 44,
+    "references_start_page": 45,
+    "page_44_last_baseline_pt": 656.53802,
+    "comparison_page_last_baselines_pt": {
+      "39": 655.19202,
+      "40": 656.216,
+      "41": 651.414,
+      "42": 654.745,
+      "43": 654.14697
+    },
+    "comparison_median_pt": 654.745,
+    "ordinary_line_spacing_pt": 11.955010000000016,
+    "distance_pt": 1.7930199999999559,
+    "within_one_ordinary_line": true,
+    "measurement": "Text baselines with x>44, y74-671; marginal line numbers, running headers, and journal footer excluded. Comparison pages39-43.",
+    "official_page_limit_claimed": false,
+    "inline_appendix": false,
+    "verdict": "PASS"
+  },
+  "bibliography_status": {
+    "records": 73,
+    "record_locators": 73,
+    "structure": "PASS",
+    "semantic_review": "PARTIAL_EXTERNAL_REVIEW_NOT_FULL_TEXT_CERTIFICATION"
+  },
+  "rebuild": "PASS",
+  "legacy_evidence": "Retained raw Boolean matrices and original audits are historical, not pooled with the evidence-gated protocol. External-source and utility studies are inherited, not new executions.",
+  "status": "REVISED_REPRODUCIBLE_RESEARCH_DRAFT",
+  "ready_to_submit": false,
+  "open_research_limits": [
+    "Shared observer/parser family; independent observer is absent.",
+    "Skipped removal is not exposed under the current extractor clause; direct transform-stage validation requires a prospective extension.",
+    "Current mechanism holdouts do not establish broad unknown-mechanism generalization.",
+    "Historical-defect replay on independently maintained watermark products is absent.",
+    "All-source full-text semantic review is not claimed."
+  ],
+  "open_author_and_venue_gates": [
+    "Three author identities remain intentionally blank.",
+    "Tang campus/city and any required ORCID need author confirmation.",
+    "Final contributions, order, approvals, correspondence and disclosures require actual authors.",
+    "Live TOSEM portal details were not reliably accessible."
+  ]
+}
