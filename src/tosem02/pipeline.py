@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .evidence_boundary import first_valid_candidate
+from .evidence_boundary import ToolObservationError, observe_elf_section
 import json
 import os
 import shutil
@@ -260,7 +262,7 @@ class Pipeline:
             self._last_extracted_payload = payload
         return payload
 
-    def remove_carrier(self, result: BuildResult, target_dir: Path) -> Path:
+    def _candidate_remove_carrier(self, result: BuildResult, target_dir: Path) -> Path:
         target = target_dir / 'removed.bin'
         self._copy_context(result.binary, target)
         if self.mutant_id == 'M15':
@@ -329,3 +331,11 @@ def run_host(binary: Path, value: int) -> str:
     if proc.returncode != 0:
         raise RuntimeError(f'host returned {proc.returncode}: {proc.stderr.strip()}')
     return proc.stdout.strip()
+
+
+def remove_carrier(self, result, target_dir):
+    def _parse(candidate_blob):
+        return _candidate_remove_carrier(candidate_blob, target_dir)
+    def _absent():
+        return _candidate_remove_carrier(result, target_dir)
+    return first_valid_candidate(result, MAGIC, _parse, _absent)

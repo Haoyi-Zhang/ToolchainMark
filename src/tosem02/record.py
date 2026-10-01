@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .evidence_boundary import first_valid_candidate
 import hashlib
 import re
 import struct
@@ -45,7 +46,7 @@ def make_record(payload: bytes, key: str, key_ignored: bool = False) -> bytes:
     return MAGIC + bytes([VERSION]) + tag + struct.pack('>H', len(payload)) + encoded + checksum(payload)
 
 
-def locate_record(data: bytes) -> tuple[int, int]:
+def _candidate_locate_record(data: bytes) -> tuple[int, int]:
     start = data.find(MAGIC)
     if start < 0:
         raise ExtractionError('absent', 'logical record magic not found')
@@ -121,3 +122,11 @@ def parse_symbols(binary: Path, key: str, key_ignored: bool = False, checksum_by
     if not checksum_bypass and recorded_checksum != checksum(payload):
         raise ExtractionError('checksum', 'symbol payload checksum mismatch')
     return payload
+
+
+def locate_record(data):
+    def _parse(candidate_blob):
+        return _candidate_locate_record(candidate_blob)
+    def _absent():
+        return _candidate_locate_record(data)
+    return first_valid_candidate(data, MAGIC, _parse, _absent)

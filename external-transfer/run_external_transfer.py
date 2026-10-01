@@ -10,6 +10,16 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
+
+try:
+    from tosem02.evidence_boundary import ObservationUnavailable, require_observed_output
+except ImportError:
+    class ObservationUnavailable(RuntimeError): pass
+    def require_observed_output(*, returncode, path, stdout=""):
+        if returncode != 0: raise ObservationUnavailable(f"program did not terminate successfully: {returncode}")
+        if path is None: return stdout
+        if not path.is_file(): raise ObservationUnavailable(f"required output file was not produced: {path.name}")
+        return path.read_text(encoding="utf-8")
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent

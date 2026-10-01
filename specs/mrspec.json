@@ -85,7 +85,20 @@
       "claim_ids": [
         "C-FULL",
         "C-GREEDY"
-      ]
+      ],
+      "upstream_guard": {
+        "operators": [
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M12"
+        ],
+        "row_class": "STAGE_ISOLATION",
+        "interpretation": "The upstream operator is disabled to isolate the negative antecedent. These rows are admitted antecedent checks, not fault-active executions."
+      },
+      "required_rejection_type": "WRONG_KEY"
     },
     {
       "id": "MR05",
@@ -130,7 +143,8 @@
         "C-DIFFERENTIAL",
         "C-BREADTH",
         "C-FULL"
-      ]
+      ],
+      "admission": "Both requested compiler configurations must be supported and actually realized."
     },
     {
       "id": "MR07",
@@ -176,6 +190,10 @@
       "claim_ids": [
         "C-FULL",
         "C-GREEDY"
+      ],
+      "predicate_components": [
+        "payload_fidelity",
+        "host_observation_equivalence"
       ]
     },
     {
@@ -198,7 +216,20 @@
       "claim_ids": [
         "C-FULL",
         "C-GREEDY"
-      ]
+      ],
+      "upstream_guard": {
+        "operators": [
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M12"
+        ],
+        "row_class": "STAGE_ISOLATION",
+        "interpretation": "The upstream operator is disabled to isolate the negative antecedent. These rows are admitted antecedent checks, not fault-active executions."
+      },
+      "required_rejection_type": "CARRIER_ABSENT"
     },
     {
       "id": "MR10",
@@ -220,7 +251,20 @@
       "claim_ids": [
         "C-FULL",
         "C-GREEDY"
-      ]
+      ],
+      "upstream_guard": {
+        "operators": [
+          "M01",
+          "M02",
+          "M03",
+          "M04",
+          "M05",
+          "M12"
+        ],
+        "row_class": "STAGE_ISOLATION",
+        "interpretation": "The upstream operator is disabled to isolate the negative antecedent. These rows are admitted antecedent checks, not fault-active executions."
+      },
+      "required_rejection_type": "INTEGRITY_FAILURE"
     },
     {
       "id": "MR11",
@@ -241,7 +285,8 @@
       "claim_ids": [
         "C-FULL",
         "C-GREEDY"
-      ]
+      ],
+      "direct_verdict": "Requested and realized compiler/optimization fields must agree; this relation directly judges configuration fidelity."
     },
     {
       "id": "MR12",
@@ -283,7 +328,9 @@
       "handler": "mr13_reordered",
       "claim_ids": [
         "C-FULL"
-      ]
+      ],
+      "evidence_source": "current_handler_action_trace",
+      "sequence_contract": "Build two independently requested artifacts; extract in the opposite order from the build order; retain payload, key, compiler, optimization, artifact identity, and action trace for both artifacts."
     },
     {
       "id": "MR14",

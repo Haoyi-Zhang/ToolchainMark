@@ -37,3 +37,21 @@ The new interpreter shares a parser family with its seed-free carrier observer. 
 The GNU/LLVM 378-case study and public source-pair 120-row study are inherited evidence from the uploaded package, not newly executed in this revision. The latter lacks an automated embedding/extraction interface and a confirmed historical defect pair; its 10 output differences are conditional on the source-equivalence assumption.
 
 The manuscript is a draft with three supplied identities and three blank layout reservations. It is not ready for submission with an incomplete author roster.
+
+## Portable verification entry points
+
+From a checkout or a copy containing only `artifact/`:
+
+```sh
+cd artifact
+./scripts/verify_science.sh
+```
+
+This command validates code, specifications, retained evidence, and scientific derivations without requiring paper sources, author metadata, or historical release audits. Paper compilation is optional and separate:
+
+```sh
+cd artifact
+./scripts/build_paper_optional.sh ../paper
+```
+
+Rows are classified as `FAULT_ACTIVE`, `STAGE_ISOLATION`, or `CLEAN`. For MR04, MR09, and MR10, M01--M05 and M12 are guarded upstream; their 972 expanded-matrix rows check the negative antecedent and are not counted as active fault executions. Legacy two-run equality covered retained row fields only and must not be described as complete trace replay.

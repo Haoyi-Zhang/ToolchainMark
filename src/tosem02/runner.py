@@ -186,3 +186,27 @@ def run_robustness(output: Path, workers: int = 8, work_root: Path | None = None
     _write_rows(output, rows)
     shutil.rmtree(base_work, ignore_errors=True)
     return rows
+
+
+# Evidence-preserving wrapper installed after the original task implementation.
+from .trace_runtime import trace_session, install_pipeline_method_tracing, install_subprocess_proxy
+from . import pipeline as _tosem02_pipeline_module
+install_subprocess_proxy(_tosem02_pipeline_module)
+if hasattr(_tosem02_pipeline_module, 'Pipeline'):
+    install_pipeline_method_tracing(_tosem02_pipeline_module.Pipeline)
+_tosem02_original_execute_task = execute_task
+
+def execute_task(task):
+    with trace_session(task) as _trace:
+        row = _tosem02_original_execute_task(task)
+    if not isinstance(row, dict):
+        return row
+    row.update(_trace.row_fields())
+    row['per_input_observations_json'] = row.get('observations_json', row.get('observations', '{}'))
+    exception = str(row.get('exception_class') or '')
+    detail = str(row.get('detail') or '')
+    if exception in {'ToolObservationError', 'ObservationUnavailable'} or 'ToolObservationError' in detail or 'ObservationUnavailable' in detail:
+        row['admission_outcome'] = 'INADMISSIBLE'
+    else:
+        row['admission_outcome'] = 'ADMITTED'
+    return row
