@@ -14,6 +14,11 @@ The expanded paper tables and their timing macro retain the checksum-locality
 derivation below; the article reports snapshot-coherence execution and its
 per-row timings separately.
 
+The owned-object table derivation checks the retained summary against its raw
+rows: cohorts, verdicts, object counts and bytes, native calls, and summed case
+times. It rejects inconsistent aggregates before producing the paper table;
+the corresponding normal and optimized regressions do not invoke native code.
+
 The separate owned-object activity is documented in `owned_native_tool/README.md`
 and `results/owned-native-full-20261014-001`; the complete Linux compiler campaigns
 are in `results/native-execution/`. For retained checksum-locality results,

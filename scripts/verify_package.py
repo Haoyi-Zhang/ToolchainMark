@@ -266,6 +266,7 @@ def check_archives(root: Path):
             elif relative.endswith("raw.jsonl.gz"):
                 summary = json.loads((path.parent / "summary.json").read_text(encoding="utf-8"))
                 verdicts = Counter()
+                aggregate_rows = []
                 with gzip.open(path, "rt", encoding="utf-8") as stream:
                     for line in stream:
                         row = json.loads(line)
@@ -276,9 +277,15 @@ def check_archives(root: Path):
                                 not isinstance(row.get("builds"), list):
                             raise ValueError("owned raw row schema differs")
                         verdicts[row["verdict"]] += 1
+                        aggregate_rows.append(row)
                 if not verdicts or sum(verdicts.values()) != summary["rows"] or \
                         dict(verdicts) != summary["verdicts"]:
                     raise ValueError("owned raw count/verdicts differ from summary")
+                helper = root / 'artifact/evaluation/owned_record_summary.py'
+                spec = importlib.util.spec_from_file_location('package_owned_summary', helper)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                module.validate_summary(aggregate_rows, summary)
             else:
                 with gzip.open(path, "rb") as stream:
                     if not stream.read(1):

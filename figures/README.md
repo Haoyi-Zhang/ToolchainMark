@@ -1,4 +1,19 @@
-# Sensitivity figure reproduction
+# Figure reproduction
+
+The five model and workflow schematics are direct Python vector drawings of the
+relationships in the manuscript. They use Matplotlib without a TeX executable:
+
+```sh
+python -m pip install -r figures/requirements.txt
+python -B figures/build_figures.py
+```
+
+Use `--outdir ../paper/figures` to refresh manuscript inputs in a complete
+project. The paper build performs this step and updates both copies. These
+schematics do not add experimental observations; the carrier-plane grids are
+schematic views of the declared evaluation design.
+
+## Sensitivity panels
 
 The two PDF panels read the retained four-suite and twelve-class counts in
 `results-overview.csv`. These are finite planned-unit sensitivities, not population
