@@ -281,7 +281,7 @@ def check_archives(root: Path):
                 if not verdicts or sum(verdicts.values()) != summary["rows"] or \
                         dict(verdicts) != summary["verdicts"]:
                     raise ValueError("owned raw count/verdicts differ from summary")
-                helper = root / 'artifact/evaluation/owned_record_summary.py'
+                helper = Path(__file__).resolve().parents[1] / 'evaluation/owned_record_summary.py'
                 spec = importlib.util.spec_from_file_location('package_owned_summary', helper)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)

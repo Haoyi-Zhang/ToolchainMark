@@ -235,15 +235,26 @@ class PackageIntegrityTests(unittest.TestCase):
         path = self.root / relative
         path.parent.mkdir(parents=True)
         summary = path.parent / "summary.json"
-        summary.write_text(json.dumps({"rows": 1, "verdicts": {"SATISFIED": 1}}),
+        valid_summary = {
+            "small": True, "rows": 1, "verdicts": {"SATISFIED": 1},
+            "cohorts": {"clean-workflow": {"SATISFIED": 1}, "integrity-challenge": {}},
+            "emitted_objects": 0, "emitted_object_bytes": 0, "native_calls": 0,
+            "host_reference_differences": 0, "direct_integrity_disagreements": 0,
+            "case_wall_sum": 0.0, "case_cpu_sum": 0.0, "activity_wall_seconds": 0.0,
+        }
+        summary.write_text(json.dumps(valid_summary),
                            encoding="utf-8")
         with patch.object(PACKAGE, "RESULT_CONTAINERS", {relative}):
             with gzip.open(path, "wt", encoding="utf-8") as stream:
                 stream.write(json.dumps({"verdict": "SATISFIED"}) + "\n")
             self.assertFalse(PACKAGE.check_archives(self.root)[0])
             with gzip.open(path, "wt", encoding="utf-8") as stream:
-                stream.write(json.dumps({"identity": [], "verdict": "SATISFIED",
-                                         "admission": {}, "observations": {}, "builds": []}) + "\n")
+                stream.write(json.dumps({
+                    "identity": ["affine", 0, "none", "clean-workflow", "roundtrip", "none", False],
+                    "verdict": "SATISFIED", "admission": {}, "observations": {}, "builds": [],
+                    "host_calls": [], "host_reference_differences": 0,
+                    "direct_integrity_verdict": None, "case_seconds": 0.0, "case_cpu_seconds": 0.0,
+                }) + "\n")
             self.assertTrue(PACKAGE.check_archives(self.root)[0])
             summary.write_text(json.dumps({"rows": 2, "verdicts": {"SATISFIED": 2}}),
                                encoding="utf-8")
