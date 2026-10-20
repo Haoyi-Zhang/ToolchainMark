@@ -41,11 +41,7 @@ python -B figures/draw_results_overview.py --refresh-data results/admission-stud
 python -B figures/draw_results_overview.py --refresh-data results/admission-study/derived --data ../paper/figures/results-overview.csv --out-dir ../paper/figures
 ```
 
-These commands read the retained summary and class-holdout counts without running
-experiments or changing current table inputs or frozen native records. Both current
-primary manuscripts use `paper/figures/results-overview-data.tex`, which only
-includes the saved PDF panels and retains their sizes and headings. The caption
-and description remain in the primary manuscripts.
+These commands read the retained summary and class-holdout counts without running experiments or changing current table inputs or frozen native records. The current article, `paper/main.tex`, uses `paper/figures/results-overview-data.tex`, which only includes the saved PDF panels and retains their sizes and headings. The caption and description remain in that article.
 
 The original `scripts/generate_admission_tables.py` is a historical producer: it
 writes historical table inputs and the inactive `paper/figures/results-overview.tex`.
