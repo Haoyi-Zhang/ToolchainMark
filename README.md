@@ -81,6 +81,15 @@ nor certifies external citation support, a fresh native run, or PDF freshness.
 The standalone artifact repository does not contain the sibling paper and
 cannot satisfy this two-directory package check by itself.
 
+`audit/project_manifest.csv` inventories the current delivered files, excluding
+itself; it is not an executed-source identity. After changing delivery files,
+regenerate it from the clean two-directory root with
+`python3 -B artifact/evaluation/generate_package_manifest.py .`, then run the
+read-only package check above. The producer uses the checker's SHA-256, byte-size
+and portable-role rules, including deep Windows paths. It does not update
+historical native source manifests, measured results or `audit/package_audit.json`,
+and inventory generation alone does not establish a passing package check.
+
 ## Execute a new study
 
 ```sh

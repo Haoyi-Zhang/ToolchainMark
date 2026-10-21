@@ -150,6 +150,16 @@ def inventory(root: Path):
     return files, links, shared
 
 
+def filesystem_root(root: Path) -> Path:
+    """Preserve every member when Windows paths exceed legacy MAX_PATH."""
+    root = root.resolve()
+    value = str(root)
+    if os.name == "nt" and not value.startswith("\\\\?\\"):
+        value = "\\\\?\\UNC\\" + value[2:] if value.startswith("\\\\") else "\\\\?\\" + value
+        root = Path(value)
+    return root
+
+
 def check_manifest(root: Path, files: list[Path]):
     manifest = root / MANIFEST
     expected = {p.relative_to(root).as_posix(): p for p in files if p != manifest}
@@ -450,7 +460,7 @@ def run_readonly_check(artifact: Path, script: str, extra: list[str]):
 
 
 def audit_project(root: Path):
-    root = root.resolve()
+    root = filesystem_root(root)
     files, links, shared = inventory(root)
     checks, details = check_publication(root, files, links, shared)
     manifest_checks, manifest_details = check_manifest(root, files)

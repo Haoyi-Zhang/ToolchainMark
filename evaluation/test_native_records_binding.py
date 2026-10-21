@@ -50,6 +50,28 @@ class NativeSourceBindingTests(unittest.TestCase):
         self.assertIn('scripts/derive_admission_study.py',report['current_diverged_paths'])
         self.assertEqual(report['current_only_paths'],[])
 
+    def test_readme_source_split_matches_current_validator(self):
+        report=verify_native_source_binding(self.binding,ROOT,DATA)
+        text=(DATA/'README.md').read_text(encoding='utf-8')
+        # Documentation describes today's split, not a rewritten historical receipt.
+        expected=(f"{report['historical_native_input_files']}-file check, not a fresh check of today's source tree. "
+                  f"{len(report['current_diverged_paths'])} current files have since changed: "
+                  f"{report['current_identical_files']} current files still match the historical blobs, "
+                  f"{report['original_snapshot_files_used']} old versions are in `source-snapshot/`, and "
+                  f"{report['later_recovered_files_used']} old sources are in the later recovery directory.")
+        self.assertIn(expected,' '.join(text.split()))
+        self.assertEqual(report['historical_native_input_files'],
+                         report['current_identical_files']+report['original_snapshot_files_used']+
+                         report['later_recovered_files_used'])
+
+    def test_readme_recovery_declaration_matches_preserved_files(self):
+        text=' '.join((DATA/'README.md').read_text(encoding='utf-8').split())
+        self.assertIn(f"`historical-source-recovery.json`: {len(self.recovery['files'])} "
+                      'previously unsnapshotted historical inputs',text)
+        for entry in self.recovery['files']:
+            with self.subTest(path=entry['path']):
+                self.assertIn('`'+entry['path']+'`',text)
+
     def test_corrupted_recovered_byte_is_rejected(self):
         path=self.data/'historical-source-recovery/tests/test_evidence_catalog.py'
         path.write_bytes(path.read_bytes()+b'\n')

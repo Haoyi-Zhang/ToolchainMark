@@ -182,6 +182,89 @@ class PackageIntegrityTests(unittest.TestCase):
         self.assertEqual(PACKAGE.publication_mode("paper/build.sh"), "0755")
         self.assertEqual(PACKAGE.publication_mode("paper/main.tex"), "0644")
 
+    def inventory_producer(self):
+        path=SCRIPT.parents[1]/'evaluation/generate_package_manifest.py'
+        self.assertTrue(path.is_file(), 'Current delivery inventory needs its own producer')
+        spec=importlib.util.spec_from_file_location('owned_inventory_producer',path)
+        module=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_current_inventory_refreshes_exact_files_not_historical_identities(self):
+        producer=self.inventory_producer()
+        self.manifest(lambda rows: rows.append(dict(path='paper/reference_target_lock.json',
+                           sha256='0'*64,bytes='1',mode='0644')))
+        historical=self.root/'artifact/results/current-native/native-inputs.json'
+        historical.parent.mkdir(parents=True)
+        historical.write_bytes(b'{"owned_historical_identity":71}\n')
+        receipt=self.root/'artifact/audit/package_audit.json'
+        receipt.write_bytes(b'{"owned_historical_verdict":"FAIL"}\n')
+        (self.root/'paper/build.sh').write_text('#!/usr/bin/env bash\n',encoding='utf-8')
+        old_bytes={p:p.read_bytes() for p in (historical,receipt)}
+        report=producer.generate(self.root)
+        files,_,_=PACKAGE.inventory(self.root)
+        self.assertTrue(all(PACKAGE.check_manifest(self.root,files)[0].values()))
+        self.assertFalse(report['certifies_native_execution'])
+        manifest=self.root/PACKAGE.MANIFEST
+        first=manifest.read_bytes()
+        self.assertNotIn(b'reference_target_lock.json',first)
+        producer.generate(self.root)
+        self.assertEqual(first,manifest.read_bytes())
+        self.assertEqual(old_bytes,{p:p.read_bytes() for p in old_bytes})
+        with manifest.open(encoding='utf-8',newline='') as stream:
+            rows={r['path']:r for r in csv.DictReader(stream)}
+        self.assertEqual(rows['paper/build.sh']['mode'],'0755')
+
+    def test_current_inventory_does_not_hide_later_content_changes(self):
+        producer=self.inventory_producer()
+        producer.generate(self.root)
+        (self.root/'paper/main.tex').write_bytes(b'owned changed source\n')
+        files,_,_=PACKAGE.inventory(self.root)
+        self.assertFalse(PACKAGE.check_manifest(self.root,files)[0]['manifest_sha256_and_bytes'])
+
+    def test_current_inventory_rejects_dirty_root_before_any_write(self):
+        producer=self.inventory_producer()
+        self.manifest()
+        original=(self.root/PACKAGE.MANIFEST).read_bytes()
+        (self.root/'private-notes').mkdir()
+        with self.assertRaisesRegex(ValueError,'paper and artifact'):
+            producer.generate(self.root)
+        self.assertEqual(original,(self.root/PACKAGE.MANIFEST).read_bytes())
+        (self.root/'private-notes').rmdir()
+        (self.root/'paper/main.aux').write_bytes(b'owned compiler auxiliary')
+        with self.assertRaisesRegex(ValueError,'file roles'):
+            producer.generate(self.root)
+        self.assertEqual(original,(self.root/PACKAGE.MANIFEST).read_bytes())
+
+    def test_current_inventory_cli_reports_delivery_not_native_execution(self):
+        producer=self.inventory_producer()
+        result=subprocess.run([sys.executable,'-B',str(Path(producer.__file__)),str(self.root)],
+                              text=True,capture_output=True,check=False,timeout=10)
+        self.assertEqual(result.returncode,0,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['scope'],'current-delivery-inventory')
+        self.assertFalse(report['certifies_native_execution'])
+        self.assertEqual(report['manifest'],PACKAGE.MANIFEST)
+
+    def test_default_audit_does_not_omit_existing_deep_files(self):
+        base=Path('\\\\?\\'+str(self.root.resolve())) if sys.platform=='win32' else self.root
+        directory=base/'paper'/('owned-a'*12)/('owned-b'*12)
+        directory.mkdir(parents=True)
+        deep=directory/'retained-owned.txt'
+        deep.write_bytes(b'owned deep-path identity\n')
+        try:
+            self.manifest(lambda rows: rows.append(dict(path=deep.relative_to(base).as_posix(),
+                sha256=PACKAGE.sha256(deep),bytes=str(deep.stat().st_size),mode='0644')))
+            # Isolate enumeration from data-only subprocesses on this tiny fixture.
+            with patch.object(PACKAGE,'run_readonly_check',return_value=(False,{'scope':'owned fixture'})):
+                report=PACKAGE.audit_project(self.root)
+            self.assertTrue(report['checks']['manifest_exact_path_set'],report['details']['manifest_issues'])
+            self.assertTrue(report['checks']['manifest_sha256_and_bytes'])
+        finally:
+            deep.unlink()
+            directory.rmdir()
+            directory.parent.rmdir()
+
     def test_missing_path_and_changed_bytes_are_rejected(self):
         paths = self.manifest(lambda rows: rows.pop())
         self.assertFalse(self.checked(paths)["manifest_exact_path_set"])
