@@ -92,7 +92,7 @@ def trace(out):
     d.line([(xs[0], .85), (xs[-1], .85)], arrow=True)
     d.text(3.5, 1.15, 'source trace $\\tau_s$', 8.5)
     d.text(11.5, 1.15, 'follow-up trace $\\tau_f$', 8.5)
-    d.text(7.5, .35, '$R$ selects projection $\\Omega_R$', 9)
+    d.text(7.5, .35, '$R$ selects projection $O_R$', 9)
     d.save(out, 'trace-model')
 
 
