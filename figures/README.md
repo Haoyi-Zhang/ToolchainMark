@@ -43,10 +43,11 @@ python -B figures/draw_results_overview.py --refresh-data results/admission-stud
 
 These commands read the retained summary and class-holdout counts without running experiments or changing current table inputs or frozen native records. The current article, `paper/main.tex`, uses `paper/figures/results-overview-data.tex`, which only includes the saved PDF panels and retains their sizes and headings. The caption and description remain in that article.
 
-The original `scripts/generate_admission_tables.py` is a historical producer: it
-writes historical table inputs and the inactive `paper/figures/results-overview.tex`.
-It has no plotting flag and is not the current figure or current-table refresh
-command. The active `results-overview-data.tex` wrapper is outside its write paths.
+The original `scripts/generate_admission_tables.py` is a historical producer:
+it can write historical table inputs and a `paper/figures/results-overview.tex`
+wrapper, which is not included in this delivery. It has no plotting flag and is
+not the current figure or current-table refresh command. The active
+`results-overview-data.tex` wrapper is outside its write paths.
 
 The unmodified Linux Libertine regular TrueType face is bundled under
 `../fonts/OFL-1.1.txt`. The renderer also accepts `--font` or matching installed
