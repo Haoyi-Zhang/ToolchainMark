@@ -1,6 +1,8 @@
 {
   "schema_version": "2.0",
-  "project_root": "/mnt/data/TOSEM02_FIX_WORK/TOSEM-02",
+  "project_root": "<PROJECTS_ROOT>",
+  "recorded_output_sha256": "f6e2932f5feaeee0920d730e5f4bf5eb536ea62ae55904a1b69f2f8a73dba7a9",
+  "path_presentation": "The host-specific root is redacted; historical check values and the FAIL verdict are unchanged.",
   "checks": {
     "root_entries_exact": true,
     "no_symlinks": true,

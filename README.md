@@ -101,6 +101,11 @@ and portable-role rules, including deep Windows paths. It does not update
 historical native source manifests, measured results or `audit/package_audit.json`,
 and inventory generation alone does not establish a passing package check.
 
+The published historical package-check record uses `<PROJECTS_ROOT>` in place
+of its machine-specific root. This path redaction does not change any historical
+check, failure, count or verdict; the original output identity is retained in
+`recorded_output_sha256`.
+
 ## Execute a new study
 
 ```sh
