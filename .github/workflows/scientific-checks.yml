@@ -27,6 +27,10 @@ jobs:
           python -m pip install -r figures/requirements.txt
           python -B figures/build_figures.py --outdir "$RUNNER_TEMP/direct-figures"
       - name: Check owned finite models and rederive retained measurements
+        run: |
+          python -B -m unittest discover -s evaluation -p test_adapter_surface.py -v
+          python -B -O -m unittest discover -s evaluation -p test_adapter_surface.py -v
+      - name: Check owned finite models and complete retained measurement derivations
         shell: bash
         run: |
           set -euo pipefail

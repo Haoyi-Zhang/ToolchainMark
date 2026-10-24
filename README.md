@@ -6,6 +6,17 @@ the retained campaigns. The v3 extension below does not relabel v2 measurements.
 
 ## Active snapshot-coherence extension
 
+The current main article concentrates on admission, snapshot coherence and the
+same-information comparison. Full supporting diagnostic proofs and complete
+relation constructions remain in the existing online supplement; no proof or
+retained experiment is discarded. `evaluation/adapter_surface.py` measures seven
+current source files in five integration roles and supplies the manuscript's
+generated surface table. Nonblank line and syntax-tree function counts are not
+person-hours or evidence of transfer to an independently maintained product.
+The three public source pairs remain conditional output comparisons without a
+confirmed embed/extract contract or historical product defect; holdout failures
+remain in their original denominators.
+
 Active MR10 admission is `evidence-gated-v3-snapshot-coherence`: strict rejection
 and locality use one captured buffer/view, the source snapshot matches the
 request, and the live follow-up matches its snapshot before and after tested
