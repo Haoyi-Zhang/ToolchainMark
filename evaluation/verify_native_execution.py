@@ -47,6 +47,10 @@ EXPECTED_RUNS = {
     },
 }
 SHARED_TREE = "a8b749feb4df9f78ac00828bc7512951e1cde851"
+# Frozen producer manifest for the retained runs, not the latest checkout's
+# inventory. Pinning its bytes also prevents replacing an old input with a
+# later file while retaining the historical path count and run/tree labels.
+SOURCE_INPUTS_SHA256 = "88dce4bdd5cae7e3a8fe93836743d9c798d061a57cb69bbfc26cf47cc1c35478"
 CSV_DERIVED = {
     "admission_failures.csv", "bootstrap.csv", "carrier_holdout.csv",
     "class_holdout.csv", "legacy_transitions.csv", "operator_holdout.csv",
@@ -130,7 +134,8 @@ def current_native_paths(source_root):
 
 
 def verify_source_inputs(data_root, source_root, provenance):
-    source_map = json.loads((data_root / "source-inputs.json").read_text(encoding="utf-8"))
+    manifest = data_root / "source-inputs.json"
+    source_map = json.loads(manifest.read_text(encoding="utf-8"))
     require(source_map["path_count"] == 71 and len(source_map["paths"]) == 71,
             "Current native input count differs")
     require(source_map["shared_git_tree"] == SHARED_TREE == provenance["shared_git_tree"],
@@ -139,8 +144,9 @@ def verify_source_inputs(data_root, source_root, provenance):
             and source_map["mirror_head_sha"] == EXPECTED_RUNS["mirror"]["head_sha"],
             "Current native run heads differ")
     names = [entry["path"] for entry in source_map["paths"]]
-    require(len(set(names)) == 71 and set(names) == current_native_paths(source_root),
-            "Current 71-path native input domain differs")
+    require(len(set(names)) == 71, "Historical 71-path native input domain differs")
+    require(digest(manifest) == SOURCE_INPUTS_SHA256,
+            "Historical native input digest differs: source-inputs.json")
     for entry in source_map["paths"]:
         name = entry["path"]
         require(name == ".github/workflows/native-compiler-campaign.yml" or
@@ -336,6 +342,10 @@ def verify(data_root=DATA, source_root=ROOT):
     return {
         "verdict": "PASS", "scope": "Recorded-current-v3-data-only; no new native execution or network check",
         "source_input_paths": inputs, "original_zip_members_preserved": members,
+        "current_only_source_input_paths": sorted(current_native_paths(source_root) - {
+            entry["path"] for entry in json.loads(
+                (data_root / "source-inputs.json").read_text(encoding="utf-8"))["paths"]}),
+        "certifies_latest_checkout_native_execution": False,
         "run_heads": {label: record["head_sha"] for label, record in EXPECTED_RUNS.items()},
         "shared_git_tree": SHARED_TREE,
         "matrices": {label: {"first_rows": len(rows[0]), "second_rows": len(rows[1]),

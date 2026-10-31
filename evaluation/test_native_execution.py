@@ -10,7 +10,7 @@ from pathlib import Path
 from verify_native_execution import (
     DATA, ROOT, COHERENCE, LOCALITY, FIELD_NAMES,
     check_mr10_row, compare_non_timing, data_path, parse_duration,
-    verify_matrix, verify_members, verify_source_inputs,
+    current_native_paths, verify_matrix, verify_members, verify_source_inputs,
 )
 
 
@@ -38,6 +38,35 @@ class NativeExecutionEvidenceTests(unittest.TestCase):
             root = Path(temporary)
             (root / "source-inputs.json").write_text(json.dumps(source), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "input count differs"):
+                verify_source_inputs(root, ROOT, self.provenance)
+
+    def test_later_file_does_not_become_a_historical_input(self):
+        with tempfile.TemporaryDirectory(prefix="native-v3-later-input-") as temporary:
+            root = Path(temporary)
+            for name in current_native_paths(ROOT):
+                target = root/name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT/name, target)
+            later = root/'tests/later_owned_fixture.py'
+            later.write_text('# Not part of the retained producer.\n', encoding='utf-8')
+            self.assertEqual(verify_source_inputs(DATA, root, self.provenance), 71)
+            source = json.loads((DATA/'source-inputs.json').read_text(encoding='utf-8'))
+            historical = {entry['path'] for entry in source['paths']}
+            self.assertIn('tests/later_owned_fixture.py', current_native_paths(root)-historical)
+            # Additional files are permitted, but a missing old input with no
+            # preserved replacement must still fail its exact byte binding.
+            (root/'hosts/H01-gcd.c').unlink()
+            with self.assertRaisesRegex(ValueError, 'input digest differs: hosts/H01-gcd.c'):
+                verify_source_inputs(DATA, root, self.provenance)
+
+    def test_historical_manifest_cannot_substitute_a_later_path(self):
+        source = json.loads((DATA/'source-inputs.json').read_text(encoding='utf-8'))
+        source['paths'][0]['path'] = 'tests/later_owned_fixture.py'
+        self.assertEqual(len({entry['path'] for entry in source['paths']}), 71)
+        with tempfile.TemporaryDirectory(prefix="native-v3-substituted-input-") as temporary:
+            root = Path(temporary)
+            (root/'source-inputs.json').write_text(json.dumps(source), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'input digest differs: source-inputs.json'):
                 verify_source_inputs(root, ROOT, self.provenance)
 
     def test_preserved_producer_bytes_remain_bound_to_original_manifest(self):
