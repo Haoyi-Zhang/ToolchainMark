@@ -74,7 +74,12 @@ def git_blob_sha1(path: Path) -> str:
 
 def run(cmd: list[str], cwd: Path | None = None, timeout: int = 30, env: dict[str, str] | None = None):
     started = time.perf_counter()
-    proc = subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, timeout=timeout, env=env)
+    try:
+        proc = subprocess.run(cmd, cwd=cwd, text=True, capture_output=True, timeout=timeout, env=env)
+    except (OSError, subprocess.TimeoutExpired, UnicodeError) as exc:
+        # None is not a process exit status. Never compare unavailable outputs.
+        proc = subprocess.CompletedProcess(cmd, None, "",
+            "execution-observation-unavailable: " + type(exc).__name__)
     return proc, time.perf_counter() - started
 
 
@@ -94,7 +99,7 @@ def compile_one(
     work: Path,
     mode: str,
     sanitizer: bool = False,
-) -> tuple[int, str, str, float, Path]:
+) -> tuple[int | None, str, str, float, Path]:
     exe = work / "program"
     wrapper = work / "wrapper363.c"
     wrapper.write_text(WRAPPER_363, encoding="utf-8")
@@ -129,7 +134,7 @@ def host_pair_verdict(before: dict[str, Any], after: dict[str, Any]) -> str:
     return "SATISFIED" if before["output"] == after["output"] else "INCONSISTENT"
 
 
-def relocation_verdict(compile_rc: int, run_rc: int | None, relocated_rc: int | None,
+def relocation_verdict(compile_rc: int | None, run_rc: int | None, relocated_rc: int | None,
                        source: dict[str, Any], relocated: dict[str, Any]) -> str:
     if compile_rc != 0 or run_rc != 0 or relocated_rc != 0 or not source["available"] or not relocated["available"]:
         return "INADMISSIBLE"
@@ -150,11 +155,11 @@ def main() -> None:
     if not all(COMPILERS.values()):
         missing = ", ".join(name for name, path in COMPILERS.items() if not path)
         raise SystemExit(f"Required compiler(s) unavailable: {missing}")
-    OUT.mkdir(parents=True)
     for filename, expected in EXPECTED_BLOBS.items():
         actual = git_blob_sha1(SRC / filename)
         if actual != expected:
             raise SystemExit(f"Source identity mismatch for {filename}: {actual} != {expected}")
+    OUT.mkdir(parents=True)
 
     rows: list[dict[str, Any]] = []
     observations: dict[tuple[str, str, str, str, str], dict[str, Any]] = {}
@@ -213,10 +218,12 @@ def main() -> None:
                                 "run_rc": rrc,
                                 "run_stderr": normalize(rerr, td),
                                 "output_available": source_obs["available"],
+                                "output_text": output,
                                 "output_unavailable_reason": source_obs["reason"],
                                 "output_sha256": sha256_bytes(output.encode()) if source_obs["available"] else "",
                                 "relocate_rc": reloc_rc,
                                 "relocate_output_available": relocated_obs["available"],
+                                "relocate_output_text": reloc_output,
                                 "relocate_output_unavailable_reason": relocated_obs["reason"],
                                 "relocate_output_sha256": sha256_bytes(reloc_output.encode()) if relocated_obs["available"] else "",
                                 "relocation_verdict": reloc_verdict,
@@ -373,6 +380,8 @@ def main() -> None:
         any(r["verdict"] == "INCONSISTENT" for r in compat_sem if r["case"] == case) for case in PAIRS
     )
     summary = {
+        "observation_schema": "available-output-v2",
+        "runner_sha256": sha256(Path(__file__)),
         "external_repository": "felipeasimos/software-watermark",
         "commit": "f63f49a770e3b0dc4f1d092cfa22ec2610eb13f8",
         "scholarly_doi": "10.1109/MetroInd4.0IoT54413.2022.9831668",

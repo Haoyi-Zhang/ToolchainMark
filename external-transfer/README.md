@@ -1,5 +1,22 @@
 # Independent public-prototype transfer
 
+Current adapter validation is available without acquiring upstream code:
+`PYTHONPATH=src python -B -m unittest discover -s tests -p test_external_adapter_execution.py -v`
+from the artifact root on Linux. The owned C fixtures exercise both compilers,
+required-file absence, nonzero exit, output/stability and relocation admission.
+Launch failures, timeouts and undecodable output are unavailable observations,
+not matching outputs. New rows retain actual observed text and the runner digest.
+These checks do not rerun the external examples or add independent watermark tools.
+
+For a newly generated `available-output-v2` directory, run
+`python -B verify_external_transfer.py /path/to/new/output`. This data-only
+consumer rederives exit, output-equivalence, stability and relocation verdicts,
+checks text/hash links, the complete planned frame, case summaries and totals,
+and compares source identities with the supplied acquisition manifest. It
+imports no runner and executes no programs. Legacy retained rows are refused,
+not relabeled as a current rerun. Consistency of these records does not attest
+execution, licensing, upstream intent or source-pair semantic equivalence.
+
 This directory records a transfer study against the public research prototype associated with **Software Watermark Scheme** (DOI 10.1109/MetroInd4.0IoT54413.2022.9831668), repository `felipeasimos/software-watermark`, fixed at commit `f63f49a770e3b0dc4f1d092cfa22ec2610eb13f8`.
 
 The fixed repository exposes three labeled before/after C source pairs. The study treats them as an independently maintained example surface, not as a production product or historical-defect corpus. It compares an execution-only baseline with host-observation equivalence under GCC and Clang at five optimization levels, relocation, and address/undefined-behavior sanitizers.
