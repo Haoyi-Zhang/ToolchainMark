@@ -45,8 +45,8 @@ class NativeSourceBindingTests(unittest.TestCase):
         report=self.verify()
         self.assertEqual(report['historical_native_input_files'],71)
         self.assertEqual(report['original_snapshot_files_used'],6)
-        self.assertEqual(report['later_recovered_files_used'],3)
-        self.assertEqual(report['current_identical_files'],62)
+        self.assertEqual(report['later_recovered_files_used'],4)
+        self.assertEqual(report['current_identical_files'],61)
         self.assertIn('scripts/derive_admission_study.py',report['current_diverged_paths'])
         self.assertEqual(report['current_only_paths'],[])
 
@@ -80,6 +80,12 @@ class NativeSourceBindingTests(unittest.TestCase):
 
     def test_corrupted_historical_package_verifier_is_rejected(self):
         path=self.data/'historical-source-recovery/scripts/verify_package.py'
+        path.write_bytes(path.read_bytes()+b'\n')
+        with self.assertRaisesRegex(ValueError,'Later recovery bytes differ'):
+            self.verify()
+
+    def test_corrupted_historical_reference_audit_is_rejected(self):
+        path=self.data/'historical-source-recovery/scripts/audit_references.py'
         path.write_bytes(path.read_bytes()+b'\n')
         with self.assertRaisesRegex(ValueError,'Later recovery bytes differ'):
             self.verify()

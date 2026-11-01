@@ -86,6 +86,17 @@ class NativeExecutionEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "run binding differs"):
             verify_members(DATA, bad)
 
+    def test_preserved_reference_audit_cannot_be_rebased(self):
+        with tempfile.TemporaryDirectory(prefix='native-reference-binding-') as temporary:
+            root=Path(temporary)
+            shutil.copy2(DATA/'source-inputs.json',root/'source-inputs.json')
+            shutil.copytree(DATA/'source-snapshot',root/'source-snapshot')
+            self.assertEqual(verify_source_inputs(root,ROOT,self.provenance),71)
+            path=root/'source-snapshot/scripts/audit_references.py'
+            path.write_bytes(path.read_bytes()+b'\n')
+            with self.assertRaisesRegex(ValueError,'input digest differs: scripts/audit_references.py'):
+                verify_source_inputs(root,ROOT,self.provenance)
+
     def test_mr10_requires_complete_true_v3_facts_and_snapshots(self):
         admission = {name: True for name in COHERENCE | LOCALITY}
         observations = {

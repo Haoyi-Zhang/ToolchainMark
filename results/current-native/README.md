@@ -33,10 +33,13 @@ UTC timestamps; none is inferred or copied from an earlier campaign.
   verified native input blobs, including the repaired CLI and utility helper.
   They are inert provenance copies, not an additional execution or a
   standalone installable package.
-- `historical-source-recovery/` and `historical-source-recovery.json`: 3
+- `historical-source-recovery/` and `historical-source-recovery.json`: 4
   previously unsnapshotted historical inputs: the regression module
   `tests/test_evidence_catalog.py`, package verifier `scripts/verify_package.py`,
-  and recheck module `src/tosem02/recheck.py`, recovered from the recorded canonical Git commit.
+  recheck module `src/tosem02/recheck.py`, and reference audit
+  `scripts/audit_references.py`. The latter was preserved before its current
+  reference-identifier update and matches the unchanged historical manifest;
+  the other inputs were recovered from the recorded canonical Git commit.
   Each file matches its published Git blob;
   recovery is not a new execution or a replacement for the original snapshot.
 - `transport.json`: byte lengths, raw/gzip SHA-256 identities and successful
@@ -99,9 +102,9 @@ workflow invokes the read-only verifier. Native compiler YAML is byte-identical
 to the validated workflow, including the `native-check-*` trigger; its execution
 and resource steps are unchanged. The recorded fresh campaigns include the
 repaired native inputs. The original `validation.json` records the then-current
-71-file check, not a fresh check of today's source tree. 9 current files
-have since changed: 62 current files still match the historical blobs, 6
-old versions are in `source-snapshot/`, and 3 old sources are in the later
+71-file check, not a fresh check of today's source tree. 10 current files
+have since changed: 61 current files still match the historical blobs, 6
+old versions are in `source-snapshot/`, and 4 old sources are in the later
 recovery directory. The verifier reports these categories and any current-only
 paths separately. It does not use the old runs to certify current v3 native
 execution. If an old blob is unavailable or differs, historical binding fails;
