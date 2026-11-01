@@ -1,4 +1,9 @@
-"""Configured activation groups, distinct from admission and verdict."""
+"""Configuration groups, distinct from admission, verdict and runtime triggering.
+
+FAULT_ACTIVE and fault_active_rows are retained wire labels for fault-enabled
+configurations. They mean the specified guard did not disable the mechanism;
+they do not establish that its fault-bearing branch actually executed.
+"""
 from collections import Counter
 
 GUARDED_RELATIONS = frozenset({'MR04', 'MR09', 'MR10'})
@@ -6,6 +11,7 @@ GUARDED_OPERATORS = frozenset({'M01', 'M02', 'M03', 'M04', 'M05', 'M12'})
 
 
 def activation_mode(relation: str, defect: str) -> str:
+    """Classify the configuration only, never infer a runtime fault trigger."""
     if defect == 'CLEAN':
         return 'CLEAN'
     if relation in GUARDED_RELATIONS and defect in GUARDED_OPERATORS:

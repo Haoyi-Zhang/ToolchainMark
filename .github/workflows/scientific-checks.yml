@@ -43,6 +43,8 @@ jobs:
           OUT="$RUNNER_TEMP/scientific-evidence"
           python -B --version 2>&1 | tee "$OUT/python.log"
           python -B -m unittest -v test_integrity_admission test_repair_models test_scientific_repairs test_study_coverage test_evidence_catalog test_external_transfer test_evidence_boundaries.EvidenceBoundaryTests 2>&1 | tee "$OUT/models.log"
+          python -B -m unittest -v test_removal_admission 2>&1 | tee "$OUT/removal-admission.log"
+          python -O -B -m unittest -v test_removal_admission 2>&1 | tee "$OUT/removal-admission-optimized.log"
           python -B -m unittest discover -s evaluation -p 'test_native_records_binding.py' -v 2>&1 | tee "$OUT/native-binding-tests.log"
           python -O -B -m unittest discover -s evaluation -p 'test_native_records_binding.py' -v 2>&1 | tee "$OUT/native-binding-optimized-tests.log"
           python -B -m unittest discover -s evaluation -p 'test_package_integrity.py' -v 2>&1 | tee "$OUT/package-integrity-tests.log"

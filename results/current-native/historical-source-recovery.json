@@ -30,6 +30,13 @@
       "source_kind": "Pre-edit source retained locally and verified against the recorded historical Git blob",
       "source_url": "https://raw.githubusercontent.com/Haoyi-Zhang/ToolchainMark/c8367e792913794672baff73cee2a62df2975574/src/tosem02/recheck.py",
       "mirror_source_url": "https://raw.githubusercontent.com/Haoyi-Zhang/ToolchainMark-code/777877f94814a217b7a73c24c9c3f568469d492e/src/tosem02/recheck.py"
+    },
+    {
+      "path": "scripts/generate_admission_tables.py",
+      "git_blob_sha": "a4ff62d29b14f35597430fe9684076dba834c0ce",
+      "source_kind": "Pre-edit bytes preserved during current maintenance; verified against the unchanged historical native-input manifest. No new execution.",
+      "source_url": "https://raw.githubusercontent.com/Haoyi-Zhang/ToolchainMark/c8367e792913794672baff73cee2a62df2975574/scripts/generate_admission_tables.py",
+      "mirror_source_url": "https://raw.githubusercontent.com/Haoyi-Zhang/ToolchainMark-code/777877f94814a217b7a73c24c9c3f568469d492e/scripts/generate_admission_tables.py"
     }
   ]
 }

@@ -46,14 +46,14 @@ table('admission-overview.tex',
  'Surface & Attempted & Satisfied & Inconsistent & Inadmissible',[
  ['Clean',n(s['clean_rows']),n(s['clean'].get('SATISFIED',0)),0,0],
  ['Stage isolation',macro['EvidenceStageIsolationRows'],macro['EvidenceStageIsolationRows'],0,0],
- ['Fault-active mechanisms',macro['EvidenceFaultRows'],macro['EvidenceFaultSatisfied'],macro['EvidenceInconsistent'],macro['EvidenceInadmissible']],
+ ['Fault-enabled configurations',macro['EvidenceFaultRows'],macro['EvidenceFaultSatisfied'],macro['EvidenceInconsistent'],macro['EvidenceInadmissible']],
  ['Total',macro['EvidenceRows'],n(s['clean_rows']+s['defect_verdicts']['SATISFIED']),macro['EvidenceInconsistent'],macro['EvidenceInadmissible']]])
 reason_names={'source_payload_recovered':'Source extraction does not recover the requested payload',
  'requested_branches_executed':'The requested compiler or optimization branch did not occur',
  'source_carrier_valid':'A valid authoritative source carrier cannot be established',
- 'carrier_removed':'Carrier removal did not establish absence',
+ 'carrier_removed':'Absence of an acceptable carrier was not established',
  'integrity_corruption_established':'Corruption did not reach the intended integrity decision'}
-table('admission-reasons.tex','Failed evidence gates in fault executions. Reasons are recorded at the first failed gate, so the rows form a partition rather than overlapping causes.',
+table('admission-reasons.tex','Failed evidence gates in nonclean configurations. Reasons are recorded at the first failed gate, so the rows form a partition rather than overlapping causes.',
  'tab:admission-reasons','@{}X r@{}','First failed gate & Rows',
  [[reason_names[k],n(v)] for k,v in sorted(s['reasons'].items(),key=lambda x:-x[1])])
 labels={'round_trip':'Round trip','host_semantics':'+ host observations','compiler_differential':'+ compiler/optimization comparisons','complete_catalog':'Complete catalog'}

@@ -3,7 +3,7 @@
 1. Define carrier authority, supported transformations, destructive transformations, observations, rejection categories, and state boundaries before execution.
 2. Admit a relation only when its support condition and intervention postcondition are established.
 3. Preserve one direct relation for every claim-critical contract clause before optimizing execution order.
-4. Separate clean, fault-active, and stage-isolation rows; never count an upstream-guard row as an active fault execution.
+4. Separate clean, fault-enabled, and stage-isolation configurations; never count a guard-disabled row as enabled. Enabled is not evidence that the fault-bearing branch ran. Retained `FAULT_ACTIVE` labels denote this configuration group.
 5. Treat observation-tool failure, missing required output, and non-success termination as inadmissible rather than absent, equal, passed, or exposed.
 6. Retain negative rejection categories instead of collapsing wrong-key, unmarked, carrier-absent, and integrity-failure outcomes.
 7. Compare all three verdict values during context replay; inadmissible rows remain in scope and match only by reason category.

@@ -240,7 +240,7 @@
         "source_carrier"
       ],
       "observer_boundary": "seed-free pipeline instance sharing the record parser",
-      "predicate": "Extraction returns exactly the absent rejection kind after verified removal.",
+      "predicate": "After verified removal, extraction matches the seed-free observer's exact typed rejection: string carriers allow absent, wrong-key, checksum, malformed or version; symbol and section carriers require absent. Tool/unknown failures are inadmissible.",
       "exposure_rule": "INCONSISTENT only; no failed admission or infrastructure error is an exposure"
     },
     {

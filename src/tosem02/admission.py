@@ -74,6 +74,21 @@ def inspect_carrier(carrier: str, binary: Path, key: str) -> dict[str, str]:
     return extract_observation(observer, binary, key)
 
 
+def no_accepted_carrier(carrier: str, observation: dict[str, str]) -> bool:
+    """Separate removal evidence from the observer's precise rejection kind.
+
+    A string first-valid scan rejects only after exhausting all candidates for
+    the supplied key. Invalid residual candidates can therefore leave a typed
+    parser rejection without leaving an accepted record. Symbol/section removal
+    still requires absence of the designated representation. Context rejections
+    and tool/unknown failures are never removal evidence.
+    """
+    reasons = {'absent'}
+    if carrier == 'string':
+        reasons.update({'wrong-key', 'checksum', 'malformed', 'version'})
+    return observation.get('kind') == 'rejection' and observation.get('value') in reasons
+
+
 def evaluate(relation: str, pipeline: Pipeline, host: Path, root: Path, *,
              default_compiler: str = 'gcc', default_optimization: str = 'O2') -> ScientificOutcome:
     evidence = Evidence()
@@ -200,9 +215,14 @@ def _evaluate(relation: str, pipeline: Pipeline, host: Path, root: Path, e: Evid
         physical = (target_snapshot.strict if relation == 'MR10'
                     else inspect_carrier(pipeline.carrier, target, KEY1))
         e.observations['followup_carrier'] = physical
-        expected = 'absent' if relation == 'MR09' else 'checksum'
-        e.require('carrier_removed' if relation == 'MR09' else 'integrity_corruption_established',
-                  physical == {'kind': 'rejection', 'value': expected})
+        if relation == 'MR09':
+            e.require('carrier_removed', no_accepted_carrier(pipeline.carrier, physical))
+            # Preserve the seed-free observer's reason; not every rejection is
+            # interchangeable with the rejection established by this removal.
+            expected = physical
+        else:
+            expected = {'kind': 'rejection', 'value': 'checksum'}
+            e.require('integrity_corruption_established', physical == expected)
         if relation == 'MR10':
             e.observations['integrity_snapshots']['followup'] = target_snapshot.identity()
             facts = intervention_facts(source_snapshot.material, target_snapshot.material)
@@ -215,7 +235,7 @@ def _evaluate(relation: str, pipeline: Pipeline, host: Path, root: Path, e: Evid
         if relation == 'MR10':
             e.require('followup_unchanged_during_extraction',
                       target.read_bytes() == target_snapshot.artifact_bytes)
-        return obs == {'kind': 'rejection', 'value': expected}
+        return obs == expected
     if relation == 'MR11':
         result = build('requested', compiler='clang', optimization='Os'); e.phase = 'trace-observation'
         e.observations.update(requested=['clang', 'Os'], actual=[result.actual_compiler, result.actual_optimization])

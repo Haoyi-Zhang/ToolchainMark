@@ -134,7 +134,7 @@ def paper_inputs(summary):
            '\\label{tab:admission-overview}\n\\small\n\\begin{tabularx}{\\textwidth}{@{}X r r r r@{}}\n\\toprule\nSurface & Attempted & Satisfied & Inconsistent & Inadmissible \\\\\n\\midrule\n')
     rows=[['Clean',n(summary['clean_rows']),n(summary['clean']['SATISFIED']),0,0],
           ['Stage isolation',macro['EvidenceStageIsolationRows'],macro['EvidenceStageIsolationRows'],0,0],
-          ['Fault-active mechanisms',macro['EvidenceFaultRows'],macro['EvidenceFaultSatisfied'],macro['EvidenceInconsistent'],macro['EvidenceInadmissible']],
+          ['Fault-enabled configurations',macro['EvidenceFaultRows'],macro['EvidenceFaultSatisfied'],macro['EvidenceInconsistent'],macro['EvidenceInadmissible']],
           ['Total',macro['EvidenceRows'],n(summary['clean_rows']+summary['defect_verdicts']['SATISFIED']),macro['EvidenceInconsistent'],macro['EvidenceInadmissible']]]
     table+=''.join(' & '.join(str(x) for x in row)+' \\\\\n' for row in rows)
     table+='\\bottomrule\n\\end{tabularx}\n\\end{table}\n'
