@@ -63,6 +63,10 @@ class NativeSourceBindingTests(unittest.TestCase):
         self.assertEqual(report['historical_native_input_files'],
                          report['current_identical_files']+report['original_snapshot_files_used']+
                          report['later_recovered_files_used'])
+        overview=' '.join((ROOT/'README.md').read_text(encoding='utf-8').split())
+        self.assertIn(f"unchanged current files supply {report['current_identical_files']},",overview)
+        self.assertIn(f"and {report['later_recovered_files_used']} preserved source files supply",overview)
+        self.assertIn(f"{len(report['current_diverged_paths'])} current source files no longer have those bytes",overview)
 
     def test_readme_recovery_declaration_matches_preserved_files(self):
         text=' '.join((DATA/'README.md').read_text(encoding='utf-8').split())
