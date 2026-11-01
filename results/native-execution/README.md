@@ -1,7 +1,7 @@
 # Current v3 native execution records
 
 This directory publishes the four plain-CSV matrices from two complete Linux
-executions of the current `evidence-gated-v3-snapshot-coherence` implementation.
+executions of the recorded `evidence-gated-v3-snapshot-coherence` implementation.
 Each execution ran the same 18-host × 3-carrier × 25-case × 14-relation plan
 twice, yielding 18,900 unique configured keys per matrix. The primary and
 mirror runs repeat the same implementation and Git tree within this project's
@@ -16,13 +16,17 @@ run/head/job/artifact identity, and the ZIP's SHA-256. The full original ZIPs
 are retained by the project coordinator rather than duplicated here.
 `source-inputs.json` records the 71 producer path/blob identities matched
 against the untruncated Git tree common to both run heads. `source-snapshot/`
-preserves the package checker and recheck module from that execution; other
-inputs retain byte-identical working copies. The recorded v2 and v3 producer
+preserves eight changed inputs from that execution: the reference audit,
+package checker, recheck module, table generator, relation specification,
+accounting module, admission module, and data-only derivation script. The other 63 inputs retain
+byte-identical working copies. Every preserved file matches all recorded
+byte, SHA-256 and Git-blob identities; these are data-only copies, not later
+code relabeled as the old execution. The recorded v2 and v3 producer
 manifests share 63 of their 71 input blobs. Their measurement records remain
 separate in `results/current-native/` and this directory.
 
 The primary first matrix has 756 satisfied clean controls, 972 satisfied
-stage-isolation rows, and 17,172 fault-active rows: 11,898 satisfied, 4,266
+stage-isolation rows, and 17,172 fault-enabled configurations: 11,898 satisfied, 4,266
 inconsistent, and 1,008 inadmissible. The 24 seeded operators form 1,296
 planned fault units, of which 1,242 are exposed by at least one admitted
 relation; all 1,296 have an admitted case. All 1,206 admitted MR10 rows per
@@ -43,7 +47,9 @@ python3 -O -B evaluation/verify_native_execution.py
 It checks the 71 recorded producer inputs against current or preserved bytes, each published member's original ZIP
 identity, all four exact planned key domains and v3 admission records, rerun
 agreement, and full rederivation of both sets of 14 derived files. These checks
-verify the published data and its producer binding. Observation semantics are
+verify the published data and its historical producer binding, not an execution
+of the subsequently repaired checkout. Enabled configurations do not by
+themselves prove that a defect was triggered at runtime. Observation semantics are
 checked by the recorded native tests and relation gates; complete trajectory
 replay, product transfer, and unseen-fault sensitivity require separate evidence.
 The unexposed M15 operator and zero-sensitivity classes and operators

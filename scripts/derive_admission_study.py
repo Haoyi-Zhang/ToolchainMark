@@ -85,11 +85,17 @@ def derive(matrix, mutants_path, out, legacy=None, rerun=None):
         raise ValueError('rerun protocol differs from the primary matrix')
     out.mkdir(parents=True,exist_ok=True)
     mutants={m['id']:m for m in json.loads(mutants_path.read_text())['mutants']}
-    assert len({key(r) for r in rr})==len(rr),'duplicate scientific row identity'
-    assert all(r['verdict'] in {'SATISFIED','INCONSISTENT','INADMISSIBLE'} for r in rr)
+    # These are input-validation gates, so they must also run under python -O.
+    # Keep AssertionError compatibility for callers of the original guards.
+    if len({key(r) for r in rr})!=len(rr):
+        raise AssertionError('duplicate scientific row identity')
+    if not all(r['verdict'] in {'SATISFIED','INCONSISTENT','INADMISSIBLE'} for r in rr):
+        raise AssertionError('invalid scientific row verdict')
     for r in rr:
-        assert (r['exposed']=='True')==(r['defect_id']!='CLEAN' and r['verdict']=='INCONSISTENT')
-        if r['verdict']!='INADMISSIBLE':assert all(json.loads(r['admission_json']).values())
+        if (r['exposed']=='True')!=(r['defect_id']!='CLEAN' and r['verdict']=='INCONSISTENT'):
+            raise AssertionError('exposure differs from inconsistent nonclean verdict')
+        if r['verdict']!='INADMISSIBLE' and not all(json.loads(r['admission_json']).values()):
+            raise AssertionError('admitted scientific row has a failed admission fact')
     clean=[r for r in rr if r['defect_id']=='CLEAN']; faulty=[r for r in rr if r['defect_id']!='CLEAN']
     units=sorted({key(r)[:3] for r in faulty});design=[u for u in units if u[0]==DESIGN]
     kills=defaultdict(set);admitted=defaultdict(set)
@@ -185,7 +191,8 @@ def derive(matrix, mutants_path, out, legacy=None, rerun=None):
         write_csv(out/'legacy_transitions.csv',summary['legacy_transitions'])
     if rerun:
         d={key(r):r for r in other}; diff=[]; fields=[f for f in rr[0] if f!='duration_seconds']
-        assert len(d)==len(other),'rerun duplicate keys'
+        if len(d)!=len(other):
+            raise AssertionError('rerun duplicate keys')
         for r in rr:
             q=d.get(key(r))
             for f in fields:

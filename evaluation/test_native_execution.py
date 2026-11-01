@@ -86,6 +86,25 @@ class NativeExecutionEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "run binding differs"):
             verify_members(DATA, bad)
 
+    def test_later_preserved_inputs_reject_missing_and_corrupt_bytes(self):
+        names=('scripts/generate_admission_tables.py','scripts/derive_admission_study.py',
+               'specs/evidence_relations.json','src/tosem02/accounting.py',
+               'src/tosem02/admission.py')
+        with tempfile.TemporaryDirectory(prefix='native-new-preimage-guards-') as temporary:
+            root=Path(temporary)
+            shutil.copyfile(DATA/'source-inputs.json',root/'source-inputs.json')
+            shutil.copytree(DATA/'source-snapshot',root/'source-snapshot')
+            self.assertEqual(verify_source_inputs(root,ROOT,self.provenance),71)
+            for name in names:
+                path=root/'source-snapshot'/name;original=path.read_bytes()
+                for corrupt in (False,True):
+                    with self.subTest(path=name,corrupt=corrupt):
+                        if corrupt:path.write_bytes(original+b'\n')
+                        else:path.unlink()
+                        with self.assertRaisesRegex(ValueError,'input digest differs'):
+                            verify_source_inputs(root,ROOT,self.provenance)
+                        path.write_bytes(original)
+
     def test_preserved_reference_audit_cannot_be_rebased(self):
         with tempfile.TemporaryDirectory(prefix='native-reference-binding-') as temporary:
             root=Path(temporary)

@@ -63,6 +63,8 @@ jobs:
           python -O -B evaluation/verify_native_execution.py 2>&1 | tee "$OUT/current-v3-native-optimized-records.log"
           python -B -m unittest discover -s evaluation -p 'test_owned_record_summary.py' -v 2>&1 | tee "$OUT/owned-summary-tests.log"
           python -O -B -m unittest discover -s evaluation -p 'test_owned_record_summary.py' -v 2>&1 | tee "$OUT/owned-summary-optimized-tests.log"
+          python -B -m unittest discover -s evaluation -p 'test_owned_source_binding.py' -v 2>&1 | tee "$OUT/owned-source-tests.log"
+          python -O -B -m unittest discover -s evaluation -p 'test_owned_source_binding.py' -v 2>&1 | tee "$OUT/owned-source-optimized-tests.log"
           python -B evaluation/derive_owned_native.py --run results/owned-native-full-20261014-001 --out "$OUT/owned-derived" 2>&1 | tee "$OUT/owned-derived.log"
           CHECKS
       - name: Preserve raw observations and failed checks

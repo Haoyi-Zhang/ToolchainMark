@@ -1,5 +1,6 @@
 """Benign byte fixtures for historical native-input binding; no native tools."""
 import copy
+import hashlib
 import json
 import shutil
 import tempfile
@@ -42,13 +43,40 @@ class NativeSourceBindingTests(unittest.TestCase):
         return verify_native_source_binding(self.binding,self.current,self.data,**kwargs)
 
     def test_historical_bytes_are_verified_without_claiming_current_execution(self):
+        # Derive today's split independently from the recorded blobs and actual
+        # bytes, rather than freezing counts or trusting the validator's totals.
+        def blob_sha(path):
+            data=path.read_bytes()
+            return hashlib.sha1(b'blob '+str(len(data)).encode()+b'\0'+data).hexdigest()
+
+        historical={entry['path']:entry['git_blob_sha'] for entry in self.binding['native_paths']}
+        snapshot={entry['path']:entry['git_blob_sha'] for entry in self.provenance['source_snapshot']['files']}
+        recovered={entry['path']:entry['git_blob_sha'] for entry in self.recovery['files']}
+        self.assertEqual(len(historical),71)
+        self.assertTrue(set(snapshot).isdisjoint(recovered))
+        for directory,declared in (('source-snapshot',snapshot),('historical-source-recovery',recovered)):
+            for path,digest in declared.items():
+                with self.subTest(directory=directory,path=path):
+                    self.assertEqual(digest,historical[path])
+                    self.assertEqual(blob_sha(self.data/directory/path),digest)
+
+        identical={path for path,digest in historical.items()
+                   if (self.current/path).is_file() and blob_sha(self.current/path)==digest}
+        diverged=set(historical)-identical
+        snapshot_used=diverged&set(snapshot)
+        recovered_used=diverged&set(recovered)
+        self.assertSetEqual(diverged,snapshot_used|recovered_used)
         report=self.verify()
-        self.assertEqual(report['historical_native_input_files'],71)
-        self.assertEqual(report['original_snapshot_files_used'],6)
-        self.assertEqual(report['later_recovered_files_used'],4)
-        self.assertEqual(report['current_identical_files'],61)
+        self.assertEqual(report,{
+            'historical_native_input_files':len(historical),
+            'original_snapshot_files_used':len(snapshot_used),
+            'later_recovered_files_used':len(recovered_used),
+            'current_identical_files':len(identical),
+            'current_diverged_paths':[path for path in historical if path in diverged],
+            'current_only_paths':[],
+            'source_binding':'historical-71-byte-verified-mixed-sources',
+        })
         self.assertIn('scripts/derive_admission_study.py',report['current_diverged_paths'])
-        self.assertEqual(report['current_only_paths'],[])
 
     def test_readme_source_split_matches_current_validator(self):
         report=verify_native_source_binding(self.binding,ROOT,DATA)
@@ -90,6 +118,12 @@ class NativeSourceBindingTests(unittest.TestCase):
 
     def test_corrupted_historical_reference_audit_is_rejected(self):
         path=self.data/'historical-source-recovery/scripts/audit_references.py'
+        path.write_bytes(path.read_bytes()+b'\n')
+        with self.assertRaisesRegex(ValueError,'Later recovery bytes differ'):
+            self.verify()
+
+    def test_corrupted_historical_table_generator_is_rejected(self):
+        path=self.data/'historical-source-recovery/scripts/generate_admission_tables.py'
         path.write_bytes(path.read_bytes()+b'\n')
         with self.assertRaisesRegex(ValueError,'Later recovery bytes differ'):
             self.verify()

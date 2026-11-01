@@ -15,14 +15,42 @@ import sys
 # The documented script entry must work without installing this owned tool.
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 
-from run_owned_native import plan, versions
+from run_owned_native import plan
 from owned_native_tool import tool
 from owned_record_summary import require, validate_summary
+
+ROOT=Path(__file__).resolve().parents[1]
+# Exact registered producer identities for the retained owned activity. A later
+# checkout is not evidence that these old rows were measured with later code.
+RETAINED_SOURCE_VERSIONS={
+    'src/tosem02/admission.py':'632d95967a2680cd2d2179f56965268897ea2c248b11ecade35605ac1c28ee27',
+    'src/tosem02/integrity.py':'485762ac4f281815dd69e98f87ac2d217f20138351c4fdbed5764e981d410aa2',
+    'src/tosem02/record.py':'1daf9519b91f24ccc11262cf236cacec79447e75e2cc06c9b8d0265c332f909e',
+    'owned_native_tool/tool.py':'8b6229cb1e213d51064cb6997a700c797b577232bd696c712f70123ea280061f',
+    'owned_native_tool/adapter.py':'1518782a0863693838fc21ca62952b944973fed8f006b744bebf596b62ba401b',
+    'evaluation/run_owned_native.py':'9cbbec608936647a972b9e5e3108fa32f1d5d8c174c002189713a91f9d9f48e7',
+}
+
+def verify_recorded_sources(summary, source_root=ROOT, preserved_root=None):
+    expected=summary.get('source_versions')
+    require(type(expected) is dict and expected==RETAINED_SOURCE_VERSIONS,
+            'owned registered source identities differ')
+    preserved_root=preserved_root or source_root/'results/native-execution/source-snapshot'
+    current=[];preserved=[]
+    for name,digest in RETAINED_SOURCE_VERSIONS.items():
+        def matches(path):
+            return path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest()==digest
+        if matches(source_root/name):current.append(name)
+        else:
+            require(matches(preserved_root/name),'owned historical source bytes differ: '+name)
+            preserved.append(name)
+    return dict(recorded_sources=len(expected),current_source_files_used=current,
+                preserved_source_files_used=preserved)
 
 
 def derive(root):
     summary=json.loads((root/'summary.json').read_text())
-    require(summary['source_versions']==versions(),'owned source binding differs')
+    verify_recorded_sources(summary)
     packed=(root/'raw.jsonl.gz').read_bytes()
     unpacked=gzip.decompress(packed)
     rows=[json.loads(line) for line in unpacked.splitlines()]

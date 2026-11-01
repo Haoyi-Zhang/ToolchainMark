@@ -33,13 +33,15 @@ UTC timestamps; none is inferred or copied from an earlier campaign.
   verified native input blobs, including the repaired CLI and utility helper.
   They are inert provenance copies, not an additional execution or a
   standalone installable package.
-- `historical-source-recovery/` and `historical-source-recovery.json`: 4
+- `historical-source-recovery/` and `historical-source-recovery.json`: 5
   previously unsnapshotted historical inputs: the regression module
   `tests/test_evidence_catalog.py`, package verifier `scripts/verify_package.py`,
-  recheck module `src/tosem02/recheck.py`, and reference audit
-  `scripts/audit_references.py`. The latter was preserved before its current
-  reference-identifier update and matches the unchanged historical manifest;
-  the other inputs were recovered from the recorded canonical Git commit.
+  recheck module `src/tosem02/recheck.py`, reference audit
+  `scripts/audit_references.py`, and historical table generator
+  `scripts/generate_admission_tables.py`. The reference audit, recheck module,
+  and generator were preserved before their current edits and verified against
+  the unchanged historical native-input blobs; the regression module and
+  package verifier were recovered from the recorded canonical Git commit.
   Each file matches its published Git blob;
   recovery is not a new execution or a replacement for the original snapshot.
 - `transport.json`: byte lengths, raw/gzip SHA-256 identities and successful
@@ -81,10 +83,13 @@ PYTHONPATH=src python3 -B scripts/derive_admission_study.py \
 ```
 
 Inspect temporary outputs, then remove only that temporary directory when
-finished. Do not overwrite historical matrices or package results. The original
-`scripts/generate_admission_tables.py` is unchanged and remains a historical
-generator; it is not the command for current paper inputs. Current data-only
-verification and explicit current-table refresh use:
+finished. Do not overwrite historical matrices or package results.
+`scripts/generate_admission_tables.py` remains a historical generator, but its
+current wording has been corrected for removal admission, fault-enabled
+configurations, and retained-field comparison. Its pre-edit bytes are preserved
+in `historical-source-recovery/scripts/generate_admission_tables.py` and match
+the original historical blob. Neither version is the command for current paper
+inputs. Current data-only verification and explicit current-table refresh use:
 
 ```sh
 python3 -B evaluation/verify_native_records.py
@@ -102,9 +107,9 @@ workflow invokes the read-only verifier. Native compiler YAML is byte-identical
 to the validated workflow, including the `native-check-*` trigger; its execution
 and resource steps are unchanged. The recorded fresh campaigns include the
 repaired native inputs. The original `validation.json` records the then-current
-71-file check, not a fresh check of today's source tree. 10 current files
-have since changed: 61 current files still match the historical blobs, 6
-old versions are in `source-snapshot/`, and 4 old sources are in the later
+71-file check, not a fresh check of today's source tree. 12 current files
+have since changed: 59 current files still match the historical blobs, 7
+old versions are in `source-snapshot/`, and 5 old sources are in the later
 recovery directory. The verifier reports these categories and any current-only
 paths separately. It does not use the old runs to certify current v3 native
 execution. If an old blob is unavailable or differs, historical binding fails;
@@ -113,9 +118,14 @@ if a producer changes, its new behavior needs its own applicable native evidence
 ## Actual scientific results
 
 Each of the four raw matrices covers exactly 18,900 unique configured keys:
-756 clean controls, 972 stage-isolation checks, and 17,172 fault-active cases.
+756 clean controls, 972 stage-isolation checks, and 17,172 fault-enabled
+configurations. The retained `FAULT_ACTIVE` and `fault_active_rows` labels mean
+the specified guards did not disable the mechanism; they do not establish
+runtime fault triggering. For example, M20/MR01 is enabled without an
+overlapping-build opportunity; MR12 supplies that opportunity, but the category
+alone does not certify a trigger.
 There are no missing, unexpected or duplicate planned keys. Clean and
-stage-isolation cases are satisfied. Active outcomes are **11,898 satisfied,
+stage-isolation cases are satisfied. Fault-enabled outcomes are **11,898 satisfied,
 4,266 inconsistent, 1,008 inadmissible**. The catalog exposes **1,242/1,296**
 expanded units and **69/72** design units; M15 remains unexposed. The fixed
 suites expose 21, 27, 33 and 69 design units. Class and operator holdouts still
