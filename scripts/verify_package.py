@@ -319,16 +319,12 @@ def check_references(root: Path):
         tex = (paper / "main.tex").read_text(encoding="utf-8")
         bib = module.parse_bib((paper / "references.bib").read_text(encoding="utf-8"))
         records = json.loads((paper / "evidence/reference_records.json").read_text(encoding="utf-8"))
-        receipts = json.loads((paper / "evidence/reference_review_20260923.json").read_text(encoding="utf-8"))
+        receipts = json.loads((paper / "evidence/reference_review_current.json").read_text(encoding="utf-8"))
         shape = module.structural_audit(tex, bib, records, receipts)
         keys = [r["citation_key"] for r in records]
         receipt_keys = [r["citation_key"] for r in receipts]
-        def norm(value):
-            return re.sub(r"[^a-z0-9]", "", module.strip_tex(str(value)).lower())
         metadata = all(
-            norm(bib[key].get("title", "")) == norm(record["title"]) and
-            bib[key].get("doi", "").casefold() == record["doi"].casefold() and
-            str(bib[key].get("year", "")) == str(record["year"])
+            module.record_matches_bib(record, bib[key])
             for key, record in ((r["citation_key"], r) for r in records)
         )
         required_shape = (
@@ -337,7 +333,8 @@ def check_references(root: Path):
             set(keys) == set(receipt_keys) == set(bib) and
             shape["missing_bibliography_keys"] == [] and
             shape["uncited_bibliography_keys"] == [] and
-            shape["doi_records_unique"] and metadata
+            shape["scholarly_identifiers_unique"] and
+            not shape["receipt_identifier_mismatches"] and metadata
         )
         return required_shape, {"records": len(records), "citations": shape["citation_commands"],
                                 "fresh_record_checks_reported_by_receipts": shape["fresh_record_checks"],
