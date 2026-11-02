@@ -16,10 +16,9 @@ run/head/job/artifact identity, and the ZIP's SHA-256. The full original ZIPs
 are retained by the project coordinator rather than duplicated here.
 `source-inputs.json` records the 71 producer path/blob identities matched
 against the untruncated Git tree common to both run heads. `source-snapshot/`
-preserves eight changed inputs from that execution: the reference audit,
-package checker, recheck module, table generator, relation specification,
-accounting module, admission module, and data-only derivation script. The other 63 inputs retain
-byte-identical working copies. Every preserved file matches all recorded
+preserves 12 changed inputs from that execution; the other 59 inputs retain
+byte-identical working copies. These include later receiver, packaging and
+regression-test repairs, not a replacement measurement. Every preserved file matches all recorded
 byte, SHA-256 and Git-blob identities; these are data-only copies, not later
 code relabeled as the old execution. The recorded v2 and v3 producer
 manifests share 63 of their 71 input blobs. Their measurement records remain

@@ -1,6 +1,7 @@
 """Benign current-v3 evidence guards; never invoke native producers."""
 import copy
 import csv
+import hashlib
 import json
 import shutil
 import tempfile
@@ -21,6 +22,16 @@ class NativeExecutionEvidenceTests(unittest.TestCase):
     def test_all_published_members_and_source_inputs_match(self):
         self.assertEqual(verify_members(DATA, self.provenance), 40)
         self.assertEqual(verify_source_inputs(DATA, ROOT, self.provenance), 71)
+
+    def test_readme_current_and_preserved_input_counts(self):
+        source = json.loads((DATA/'source-inputs.json').read_text(encoding='utf-8'))
+        current = sum((ROOT/entry['path']).is_file() and
+                      hashlib.sha256((ROOT/entry['path']).read_bytes()).hexdigest() == entry['sha256']
+                      for entry in source['paths'])
+        self.assertEqual(verify_source_inputs(DATA, ROOT, self.provenance), 71)
+        text = (DATA/'README.md').read_text(encoding='utf-8')
+        self.assertIn(f'preserves {71-current} changed inputs', text)
+        self.assertIn(f'the other {current} inputs retain', text)
 
     def test_source_byte_binding_cannot_be_relabelled(self):
         source = json.loads((DATA / "source-inputs.json").read_text(encoding="utf-8"))
