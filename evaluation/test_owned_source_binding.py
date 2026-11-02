@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
-from derive_owned_native import ROOT, RETAINED_SOURCE_VERSIONS, verify_recorded_sources
+from derive_owned_native import ROOT, RETAINED_SOURCE_VERSIONS, RETAINED_PREIMAGES, verify_recorded_sources
 
 class OwnedSourceBindingTests(unittest.TestCase):
     def setUp(self):
@@ -16,27 +16,29 @@ class OwnedSourceBindingTests(unittest.TestCase):
         for name in RETAINED_SOURCE_VERSIONS:
             target=self.root/name;target.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(ROOT/name,target)
-            captured=ROOT/'results/native-execution/source-snapshot'/name
-            if captured.is_file():
-                target=self.snapshot/name;target.parent.mkdir(parents=True,exist_ok=True)
+            captured=ROOT/RETAINED_PREIMAGES[name] if name in RETAINED_PREIMAGES else None
+            if captured is not None and captured.is_file():
+                target=self.root/RETAINED_PREIMAGES[name];target.parent.mkdir(parents=True,exist_ok=True)
                 shutil.copyfile(captured,target)
         self.summary={'source_versions':copy.deepcopy(RETAINED_SOURCE_VERSIONS)}
 
     def test_registered_identity_uses_exact_preserved_admission(self):
         report=verify_recorded_sources(self.summary,self.root)
         self.assertEqual(report['recorded_sources'],6)
-        self.assertEqual(report['preserved_source_files_used'],['src/tosem02/admission.py'])
-        self.assertEqual(len(report['current_source_files_used']),5)
+        self.assertEqual(set(report['preserved_source_files_used']),set(RETAINED_PREIMAGES))
+        self.assertEqual(len(report['current_source_files_used']),4)
 
     def test_missing_or_corrupt_preimage_fails_closed(self):
-        captured=self.snapshot/'src/tosem02/admission.py'
-        original=captured.read_bytes()
-        captured.unlink()
-        with self.assertRaisesRegex(ValueError,'historical source bytes differ'):
-            verify_recorded_sources(self.summary,self.root)
-        captured.write_bytes(original+b'\n')
-        with self.assertRaisesRegex(ValueError,'historical source bytes differ'):
-            verify_recorded_sources(self.summary,self.root)
+        for relative in RETAINED_PREIMAGES.values():
+            captured=self.root/relative
+            original=captured.read_bytes()
+            captured.unlink()
+            with self.assertRaisesRegex(ValueError,'historical source bytes differ'):
+                verify_recorded_sources(self.summary,self.root)
+            captured.write_bytes(original+b'\n')
+            with self.assertRaisesRegex(ValueError,'historical source bytes differ'):
+                verify_recorded_sources(self.summary,self.root)
+            captured.write_bytes(original)
 
     def test_live_source_cannot_substitute_for_recorded_source(self):
         shutil.copyfile(self.root/'src/tosem02/admission.py',self.snapshot/'src/tosem02/admission.py')

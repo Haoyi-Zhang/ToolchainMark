@@ -11,6 +11,7 @@ from collections import Counter,defaultdict
 from pathlib import Path
 from tosem02.accounting import summarize_rows
 from tosem02.study_coverage import StudyCoverageError, require_study_coverage
+from tosem02.study_validation import StudyInputError, validate_rows
 
 RELATIONS=[f'MR{i:02d}' for i in range(1,15)]
 SUITES={'round_trip':['MR01'],'host_semantics':['MR01','MR02'],
@@ -80,9 +81,20 @@ def cover(units,kills,weights=None):
 def derive(matrix, mutants_path, out, legacy=None, rerun=None):
     rr=rows(matrix); other=rows(rerun) if rerun is not None else None
     require_study_coverage(rr,other)
-    protocol=matrix_protocol(rr)
-    if other is not None and matrix_protocol(other)!=protocol:
-        raise ValueError('rerun protocol differs from the primary matrix')
+    # Establish the JSON type contract before protocol classification uses keys.
+    from tosem02.study_validation import object_json
+    try:
+        for row in rr + (other or []):
+            object_json(row['admission_json'])
+        protocol=matrix_protocol(rr)
+        other_protocol=matrix_protocol(other) if other is not None else None
+    except (ValueError, KeyError, TypeError) as error:
+        raise StudyInputError(str(error)) from error
+    if other is not None and other_protocol!=protocol:
+        raise StudyInputError('rerun protocol differs from the primary matrix')
+    validate_rows(rr,protocol)
+    if other is not None:
+        validate_rows(other,protocol)
     out.mkdir(parents=True,exist_ok=True)
     mutants={m['id']:m for m in json.loads(mutants_path.read_text())['mutants']}
     # These are input-validation gates, so they must also run under python -O.
@@ -226,6 +238,14 @@ def main(argv=None):
         gate=dict(checks={'planned_key_domain_complete': False},
                   failed=['planned_key_domain_complete'],verdict='FAIL',
                   coverage=error.reports,remaining_study_checks='NOT_RUN')
+        a.out.mkdir(parents=True,exist_ok=True)
+        write_json(a.out/'scientific_checks.json',gate)
+        print(json.dumps(dict(scientific_checks=gate),indent=2))
+        return 1
+    except StudyInputError as error:
+        gate=dict(checks={'scientific_input_schema_valid':False},
+                  failed=['scientific_input_schema_valid'],verdict='FAIL',
+                  error=str(error),remaining_study_checks='NOT_RUN')
         a.out.mkdir(parents=True,exist_ok=True)
         write_json(a.out/'scientific_checks.json',gate)
         print(json.dumps(dict(scientific_checks=gate),indent=2))

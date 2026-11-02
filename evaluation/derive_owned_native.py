@@ -30,19 +30,24 @@ RETAINED_SOURCE_VERSIONS={
     'owned_native_tool/adapter.py':'1518782a0863693838fc21ca62952b944973fed8f006b744bebf596b62ba401b',
     'evaluation/run_owned_native.py':'9cbbec608936647a972b9e5e3108fa32f1d5d8c174c002189713a91f9d9f48e7',
 }
+RETAINED_PREIMAGES={
+    'src/tosem02/admission.py':'results/native-execution/source-snapshot/src/tosem02/admission.py',
+    'owned_native_tool/tool.py':'results/owned-source-preimages/owned_native_tool/tool.py',
+}
 
 def verify_recorded_sources(summary, source_root=ROOT, preserved_root=None):
     expected=summary.get('source_versions')
     require(type(expected) is dict and expected==RETAINED_SOURCE_VERSIONS,
             'owned registered source identities differ')
-    preserved_root=preserved_root or source_root/'results/native-execution/source-snapshot'
     current=[];preserved=[]
     for name,digest in RETAINED_SOURCE_VERSIONS.items():
         def matches(path):
             return path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest()==digest
         if matches(source_root/name):current.append(name)
         else:
-            require(matches(preserved_root/name),'owned historical source bytes differ: '+name)
+            captured = (preserved_root/name if preserved_root is not None else
+                        source_root/RETAINED_PREIMAGES[name] if name in RETAINED_PREIMAGES else None)
+            require(captured is not None and matches(captured),'owned historical source bytes differ: '+name)
             preserved.append(name)
     return dict(recorded_sources=len(expected),current_source_files_used=current,
                 preserved_source_files_used=preserved)
@@ -104,10 +109,18 @@ def derive(root):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run',type=Path,required=True)
-    parser.add_argument('--out',type=Path,required=True)
+    parser.add_argument('--out',type=Path)
+    parser.add_argument('--check-sources',action='store_true',help='verify the six registered historical source byte identities only')
     parser.add_argument('--paper',type=Path)
     args=parser.parse_args()
-    if args.out.exists():raise SystemExit('Refusing existing derivation output')
+    if args.check_sources:
+        if args.out is not None or args.paper is not None:parser.error('--check-sources does not write outputs')
+        summary=json.loads((args.run/'summary.json').read_text(encoding='utf-8'))
+        print(json.dumps(verify_recorded_sources(summary),indent=2));return
+    if args.out is None:parser.error('--out is required for derivation')
+    if args.out.resolve().is_relative_to(ROOT.parent.resolve()) or args.out.resolve().is_relative_to(args.run.resolve()):
+        parser.error('--out must be a new external derivation directory')
+    if args.out.exists() or args.out.is_symlink():raise SystemExit('Refusing existing derivation output')
     summary,result=derive(args.run)
     args.out.mkdir(parents=True,exist_ok=False)
     (args.out/'derived.json').write_text(json.dumps(result,indent=2),encoding='utf-8')

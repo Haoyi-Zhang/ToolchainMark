@@ -1,5 +1,22 @@
 # Contract-aware watermark validation artifact
 
+## Installation and checkout boundary
+
+`python -m pip install .` installs the dependency-free Python modules and the
+three small public catalogs, not hosts, research datasets, paper files or
+checkout scripts. `python -m tosem02.cli catalog` (or `tosem02 catalog`) prints
+the 14 relations and 24 operators outside a checkout. Catalog resource loaders
+also work in the installed wheel. The source checkout remains usable through
+`PYTHONPATH=src`, as in the commands below.
+
+The `run`, `robustness`, `derive` and `recheck` commands are checkout operations.
+From an installed wheel give `--artifact-root /path/to/artifact` on the command;
+source-checkout invocations can infer their own root. `derive` reads retained
+data into a new external output directory; `recheck` additionally needs the
+sibling paper/publication tree. Neither command bundles evidence into the
+wheel, and data-only derivation is not a fresh native campaign. Building a wheel
+or source distribution requires only setuptools and includes no retained rows.
+
 The [frozen research protocol](RESEARCH-PROTOCOL.md)
 defines relation admission, verdict handling and denominator separation across
 the retained campaigns. The v3 extension below does not relabel v2 measurements.
@@ -44,8 +61,8 @@ different interfaces and retain separate records.
 The sections below retain the v2 evidence history. Their descriptions of the
 then-current inputs/runs do not bind the modified v3 source to those runs.
 `evaluation/verify_native_records.py` checks all 71 historical input blobs:
-unchanged current files supply 59, the original 23-file source snapshot supplies
-7 changed files, and 5 preserved source files supply the remaining
+unchanged current files supply 56, the original 23-file source snapshot supplies
+10 changed files, and 5 preserved source files supply the remaining
 changed inputs. It reports current divergence separately and rederives the old
 matrices with the current analysis script. An explicit `--source-root PATH` can
 instead check a complete preserved v2 root. Neither path certifies native
@@ -57,7 +74,7 @@ The retained v2 MR10 admission gate was `evidence-gated-v2-checksum-locality`. A
 
 That v2 gate and its repaired native inputs completed fresh native campaigns. Canonical run 38310980867 at `c8367e792913794672baff73cee2a62df2975574` (artifact 11775931468) and mirror run 38310978633 at `777877f94814a217b7a73c24c9c3f568469d492e` (artifact 11775174136) each passed 116 real-tool regression tests and executed two complete matrices. The logs record 34.507 and 16.658 seconds respectively, without skips. Each has exactly 18,900 unique planned keys, 756 satisfied clean and 972 satisfied stage-isolation cases, and 17,172 fault-enabled configurations (11,898 satisfied, 4,266 inconsistent, 1,008 inadmissible). Sensitivity remains 1,242/1,296 expanded units and 69/72 design units. All 1,206 admitted MR10 rows contain the added locality facts; all 54 M16/MR10 cases remain inconsistent. Canonical and mirror non-timing fields agree exactly. They execute the same bound native inputs, not independent implementations.
 
-See [retained v2 native evidence](results/current-native/README.md) for lossless `first.csv.gz`/`second.csv.gz`, derived files, logs, exact measured environments, run/commit/artifact provenance, source snapshots, and temporary unpacking for rederivation. The canonical first-row duration median/maximum is 0.1229545/1.779854 seconds with Python 3.12.15. Current TeX inputs are checked against this data-only derivation by `evaluation/verify_native_records.py --paper ../paper`; the historical table generator has current wording corrections, with its pre-edit bytes preserved in `results/current-native/historical-source-recovery/scripts/generate_admission_tables.py` and verified against the unchanged historical blob. The 71 published native-input path/blob bindings remain verifiable as historical bytes, including the regression module and validated workflow trigger, but 12 current source files no longer have those bytes. The successful run/head/artifact identities were supplied by the coordinator; the archives do not provide job IDs, full repository tree objects or UTC step timestamps. Outcome/selection numbers match retained measurements, but the evidence contract and timings differ. No native program was rerun to integrate these results.
+See [retained v2 native evidence](results/current-native/README.md) for lossless `first.csv.gz`/`second.csv.gz`, derived files, logs, exact measured environments, run/commit/artifact provenance, source snapshots, and temporary unpacking for rederivation. The canonical first-row duration median/maximum is 0.1229545/1.779854 seconds with Python 3.12.15. Current TeX inputs are checked against this data-only derivation by `evaluation/verify_native_records.py --paper ../paper`; the historical table generator has current wording corrections, with its pre-edit bytes preserved in `results/current-native/historical-source-recovery/scripts/generate_admission_tables.py` and verified against the unchanged historical blob. The 71 published native-input path/blob bindings remain verifiable as historical bytes, including the regression module and validated workflow trigger, but 15 current source files no longer have those bytes. The successful run/head/artifact identities were supplied by the coordinator; the archives do not provide job IDs, full repository tree objects or UTC step timestamps. Outcome/selection numbers match retained measurements, but the evidence contract and timings differ. No native program was rerun to integrate these results.
 
 The retained gated matrices and historical archives under `native-linux` and `repair-replay` predate these locality facts and are not pooled with current MR10 qualification. `tests/test_integrity_admission.py` separately compares the old checksum-rejection rule and the current rule on the same 12 owned cases: the old rule admits nine, including six payload-changing interventions; the new rule admits only three checksum-only cases. Verified checksum bypass remains inconsistent on all three carrier models. Section/symbol utilities are mocked in those controls; their nine-versus-three comparison is not a product-defect count or an external-tool campaign.
 

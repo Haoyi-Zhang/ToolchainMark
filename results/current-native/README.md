@@ -107,8 +107,8 @@ workflow invokes the read-only verifier. Native compiler YAML is byte-identical
 to the validated workflow, including the `native-check-*` trigger; its execution
 and resource steps are unchanged. The recorded fresh campaigns include the
 repaired native inputs. The original `validation.json` records the then-current
-71-file check, not a fresh check of today's source tree. 12 current files
-have since changed: 59 current files still match the historical blobs, 7
+71-file check, not a fresh check of today's source tree. 15 current files
+have since changed: 56 current files still match the historical blobs, 10
 old versions are in `source-snapshot/`, and 5 old sources are in the later
 recovery directory. The verifier reports these categories and any current-only
 paths separately. It does not use the old runs to certify current v3 native

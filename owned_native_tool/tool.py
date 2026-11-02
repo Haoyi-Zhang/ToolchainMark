@@ -64,28 +64,81 @@ def elf_sections(data: bytes) -> dict[str, tuple[int, int, int, int]]:
     if len(data) < 64 or data[:7] != b'\x7fELF\x02\x01\x01':
         raise Rejected('malformed')
     header = struct.unpack_from('<16sHHIQQQIHHHHHH', data)
-    _, kind, machine, version, _, _, table, _, size, _, _, stride, count, names_index = header
+    ident, kind, machine, version, entry, phoff, table, hdrflags, size, phsize, phcount, stride, count, names_index = header
     if kind != 1 or machine != 62 or version != 1 or size != 64 or stride != 64 or not 2 <= count <= 256:
         raise Rejected('unsupported-object')
     if table < 64 or table + count * stride > len(data) or not 0 < names_index < count:
         raise Rejected('malformed')
+    # Recorded jitdefault objects use ELFOSABI_LINUX (3), despite the Windows
+    # calling convention; generic owned byte fixtures use ELFOSABI_NONE (0).
+    if ident[7] not in {0, 3} or ident[8:] != bytes(8) or entry or phoff or hdrflags or phsize or phcount:
+        raise Rejected('unsupported-object')
     rows = [struct.unpack_from('<IIQQQQIIQQ', data, table + i * stride) for i in range(count)]
+    if any(rows[0]):
+        raise Rejected('malformed')
     names = rows[names_index]
     if names[1] != 3 or names[4] + names[5] > len(data):
         raise Rejected('malformed')
     name_data = data[names[4]:names[4] + names[5]]
+    if not name_data or name_data[0] != 0 or name_data[-1] != 0:
+        raise Rejected('malformed')
     result = {}
+    occupied = [(0, 64), (table, table + count * stride)]
     for row in rows[1:]:
-        name_index, section_type, flags, _, offset, length, _, _, _, _ = row
+        name_index, section_type, flags, address, offset, length, link, info, alignment, entsize = row
+        if alignment and alignment & (alignment - 1):
+            raise Rejected('malformed')
+        if address or section_type not in {1, 2, 3, 4, 8, 0x70000001}:
+            raise Rejected('unsupported-object')
+        if flags & 0x800:
+            raise Rejected('unsupported-object')
+        if link >= count or (flags & 0x40 and info >= count):
+            raise Rejected('malformed')
         end = name_data.find(b'\0', name_index)
         if not 0 <= name_index < len(name_data) or end < 0:
             raise Rejected('malformed')
-        name = name_data[name_index:end].decode('ascii')
+        try:
+            name = name_data[name_index:end].decode('ascii')
+        except UnicodeDecodeError as error:
+            raise Rejected('unsupported-object') from error
         if name in result:
             raise Rejected('unsupported-object')
-        if section_type != 8 and length and (offset < 64 or offset + length > len(data)):
+        if offset > len(data) or (alignment and offset % alignment):
             raise Rejected('malformed')
+        if section_type != 8 and (offset < 64 or offset + length > len(data)):
+            raise Rejected('malformed')
+        if section_type != 8 and length:
+            if any(offset < b and a < offset + length for a, b in occupied):
+                raise Rejected('malformed')
+            occupied.append((offset, offset + length))
+        if section_type == 2:
+            if entsize != 24 or length % 24 or rows[link][1] != 3 or info > length // 24:
+                raise Rejected('malformed')
+        elif section_type == 4:
+            if entsize != 24 or length % 24 or rows[link][1] != 2 or not 0 < info < count:
+                raise Rejected('malformed')
+        elif entsize or link or info:
+            raise Rejected('unsupported-object')
         result[name] = (offset, length, flags, section_type)
+    # Validate the supported symbol/relocation tables as data, never as code.
+    for row in rows[1:]:
+        _, kind, _, _, offset, length, link, _, _, _ = row
+        if kind == 2:
+            strings=rows[link];names=data[strings[4]:strings[4]+strings[5]]
+            if not names or names[0] or names[-1]:
+                raise Rejected('malformed')
+            for pos in range(offset,offset+length,24):
+                name,_,_,index,value,size=struct.unpack_from('<IBBHQQ',data,pos)
+                if name>=len(names) or names.find(b'\0',name)<0:
+                    raise Rejected('malformed')
+                if index not in {0,0xfff1,0xfff2}:
+                    if index>=count or value+size>rows[index][5]:
+                        raise Rejected('malformed')
+        elif kind == 4:
+            for pos in range(offset,offset+length,24):
+                at,info,_=struct.unpack_from('<QQq',data,pos)
+                if info>>32>=rows[link][5]//24 or at>=rows[row[7]][5]:
+                    raise Rejected('malformed')
     return result
 
 
@@ -95,7 +148,8 @@ def record_bounds(data: bytes) -> tuple[int, int]:
         raise Rejected('absent')
     start, size, flags, section_type = section
     # The fixture's authoritative carrier is readable nonexecuting data.
-    if section_type != 1 or flags & 4 or not flags & 2:
+    # LLVM may attach SHF_GNU_RETAIN (0x200000) to llvm.used data.
+    if section_type != 1 or not flags & 2 or flags & ~(2 | 0x200000):
         raise Rejected('unsupported-object')
     return start, start + size
 

@@ -5,8 +5,9 @@ import importlib.util
 from pathlib import Path
 
 
-def package_checker():
-    source=Path(__file__).resolve().parents[2]/'scripts/verify_package.py'
+def package_checker(artifact=None):
+    from .catalog import checkout_root
+    source=checkout_root(artifact)/'scripts/verify_package.py'
     spec=importlib.util.spec_from_file_location('tosem02_review_entry',source)
     module=importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -27,7 +28,7 @@ def check_review_pdf_bindings(paper:Path,visual:dict)->bool:
 
 def recheck(artifact:Path)->dict:
     """Use the current full package checker and propagate every failed gate."""
-    result=package_checker().audit_project(artifact.resolve().parent)
+    result=package_checker(artifact).audit_project(artifact.resolve().parent)
     if result.get('verdict')!='PASS':
         failed=[name for name,passed in result.get('checks',{}).items() if not passed]
         raise RuntimeError('Evidence checks failed: '+', '.join(failed))

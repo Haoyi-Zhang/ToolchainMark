@@ -1,7 +1,7 @@
 """Validate the declared evidence interface without treating it as a proof."""
 from pathlib import Path
 import json
-from .catalog import artifact_root
+from .catalog import load_document
 REQUIRED={'id','name','polarity','stages','applicability','required_admission_facts','observation_keys','observer_boundary','predicate','exposure_rule'}
 def validate(document: dict) -> list[dict]:
     relations=document.get('relations')
@@ -16,4 +16,4 @@ def validate(document: dict) -> list[dict]:
     return relations
 
 def load()->list[dict]:
-    return validate(json.loads((artifact_root()/'specs/evidence_relations.json').read_text()))
+    return validate(load_document('evidence_relations.json'))

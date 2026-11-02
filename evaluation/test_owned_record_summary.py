@@ -47,4 +47,29 @@ class OwnedRecordSummaryTests(unittest.TestCase):
         with patch.object(Path,'read_text',read),self.assertRaisesRegex(ValueError,'summary/raw'):
             derive_owned_native.derive(RUN)
 
+    def test_raw_calls_vectors_and_action_evidence_fail_closed(self):
+        import tempfile
+        import derive_owned_native
+        for mode in ('wrong-call','missing-builds','empty-vectors','bad-input','bad-artifact','missing-extraction','contradictory-observation'):
+            rows=copy.deepcopy(self.rows);summary=copy.deepcopy(self.summary)
+            if mode=='wrong-call':
+                next(r for r in rows if r['host_calls'])['host_calls'][0]['native']^=1
+            elif mode=='missing-builds':
+                for r in rows:r['builds']=[];r['host_calls']=[]
+                summary.update(emitted_objects=0,emitted_object_bytes=0,native_calls=0)
+            elif mode=='empty-vectors':
+                for r in rows:
+                    for b in r['builds']:b['native_inputs']=[];b['native_outputs']=[];b['reference_outputs']=[]
+                    r['host_calls']=[]
+                summary['native_calls']=0
+            elif mode=='bad-input':next(r for r in rows if r['host_calls'])['host_calls'][0]['input']=False
+            elif mode=='bad-artifact':next(r for r in rows if r['host_calls'])['host_calls'][0]['artifact_sha256']='0'*64
+            elif mode=='missing-extraction':rows[0]['extractions']=[]
+            else:rows[0]['observations']['extraction']['value']='00'
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as temporary:
+                root=Path(temporary)
+                (root/'summary.json').write_text(json.dumps(summary),encoding='utf-8')
+                (root/'raw.jsonl.gz').write_bytes(gzip.compress(b'\n'.join(json.dumps(r).encode() for r in rows)))
+                with self.assertRaises(ValueError):derive_owned_native.derive(root)
+
 if __name__=='__main__':unittest.main()
