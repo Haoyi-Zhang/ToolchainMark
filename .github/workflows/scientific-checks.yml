@@ -49,6 +49,8 @@ jobs:
           python -O -B -m unittest discover -s evaluation -p 'test_native_records_binding.py' -v 2>&1 | tee "$OUT/native-binding-optimized-tests.log"
           python -B -m unittest discover -s evaluation -p 'test_package_integrity.py' -v 2>&1 | tee "$OUT/package-integrity-tests.log"
           python -O -B -m unittest discover -s evaluation -p 'test_package_integrity.py' -v 2>&1 | tee "$OUT/package-integrity-optimized-tests.log"
+          python -B -m unittest discover -s evaluation -p 'test_reference_receipt_location.py' -v 2>&1 | tee "$OUT/reference-consumer-tests.log"
+          python -O -B -m unittest discover -s evaluation -p 'test_reference_receipt_location.py' -v 2>&1 | tee "$OUT/reference-consumer-optimized-tests.log"
           python -B scripts/verify_science.py 2>&1 | tee "$OUT/retained-checks.log"
           python -B -m zipfile -e results/native-linux/evidence.zip "$OUT/native-evidence" 2>&1 | tee "$OUT/archive.log"
           python -B scripts/derive_admission_study.py --matrix "$OUT/native-evidence/native-study/first.csv" --rerun "$OUT/native-evidence/native-study/second.csv" --mutants specs/mutants.json --legacy results/raw/robustness_matrix.csv --out "$OUT/derived" 2>&1 | tee "$OUT/derivation.log"

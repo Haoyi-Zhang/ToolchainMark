@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 import re
+import unicodedata
 from collections import Counter
 from pathlib import Path
 
@@ -44,9 +45,14 @@ def parse_bib(text: str) -> dict[str, dict[str, str]]:
     entries: dict[str, dict[str, str]] = {}
     for match in re.finditer(r'@(\w+)\{([^,]+),\s*(.*?)\n\}', text, re.S):
         entry_type, key, body = match.group(1).lower(), match.group(2).strip(), match.group(3)
+        if key in entries:
+            raise ValueError('Duplicate BibTeX key: ' + key)
         fields: dict[str, str] = {'entry_type': entry_type}
         for fm in re.finditer(r'^\s*(\w+)\s*=\s*\{(.*?)\}\s*,?\s*$', body, re.M | re.S):
-            fields[fm.group(1).lower()] = fm.group(2).strip()
+            field = fm.group(1).lower()
+            if field in fields:
+                raise ValueError('Duplicate BibTeX field for ' + key + ': ' + field)
+            fields[field] = fm.group(2).strip()
         entries[key] = fields
     return entries
 
@@ -54,7 +60,7 @@ def parse_bib(text: str) -> dict[str, dict[str, str]]:
 def normalize_people(value: str) -> str:
     value = strip_tex(value).lower()
     value = value.replace(' and ', ' ')
-    return re.sub(r'[^a-z0-9]+', '', value)
+    return ''.join(c for c in unicodedata.normalize('NFKD', value).casefold() if c.isalnum())
 
 
 def scholarly_identifier(record: dict) -> str:
@@ -67,8 +73,8 @@ def scholarly_identifier(record: dict) -> str:
     if bool(doi) == bool(repository):
         raise ValueError('Require exactly one DOI or primary repository identifier')
     if doi:
-        if any(character.isspace() for character in doi) or doi.lower().startswith('doi:'):
-            raise ValueError('Expected a bare nonempty DOI')
+        if not re.fullmatch(r'10\.[0-9]{4,9}/[^\s]+', doi):
+            raise ValueError('Expected a bare DOI of the form 10.<registrant>/<suffix>')
         return 'doi:' + doi.casefold()
     if not re.fullmatch(r'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
         raise ValueError('Expected a primary GitHub repository root URL')
@@ -85,6 +91,7 @@ def record_matches_bib(record: dict, fields: dict) -> bool:
             return False
         if identity.startswith('doi:'):
             return (fields.get('doi', '').casefold() == record['doi'].casefold()
+                    and normalize_people(fields.get('author', '')) == normalize_people(record['authors'])
                     and str(fields.get('year', '')) == str(record.get('year', '')))
         return (not fields.get('doi') and
                 fields.get('url', '').rstrip('/').casefold() == record['primary_repository'].rstrip('/').casefold()
@@ -94,7 +101,42 @@ def record_matches_bib(record: dict, fields: dict) -> bool:
         return False
 
 
+def validate_reference_inputs(records: list, receipts: list) -> None:
+    """Shared consumer schema; declarations are not independent support proof."""
+    if not isinstance(records, list) or not records or not isinstance(receipts, list) or not receipts:
+        raise ValueError('Require nonempty reference and receipt lists')
+    def required_text(row, names, kind):
+        if not isinstance(row, dict):
+            raise ValueError(kind + ' must be an object')
+        for name in names:
+            value = row.get(name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(kind + ' requires nonempty text: ' + name)
+    for row in records:
+        required_text(row, ('citation_key', 'title', 'authors'), 'Reference')
+        if type(row.get('number')) is not int or row['number'] <= 0:
+            raise ValueError('Reference number must be a positive integer')
+        identity = scholarly_identifier(row)
+        year = row.get('year', '')
+        if type(year) not in (int, str):
+            raise ValueError('Reference year must be text or an integer, not a Boolean')
+        if identity.startswith('doi:') and not re.fullmatch(r'[1-9][0-9]{3}', str(year)):
+            raise ValueError('DOI reference year must be a four-digit year')
+    for row in receipts:
+        required_text(row, ('citation_key', 'locator', 'source_class', 'verification_scope'), 'Receipt')
+        if type(row.get('record_located_this_revision')) is not bool:
+            raise ValueError('Receipt location declaration must be a Boolean')
+        for name in ('full_text_reviewed', 'inherited_record_located'):
+            if name in row and type(row[name]) is not bool:
+                raise ValueError('Receipt ' + name + ' must be a Boolean')
+        if 'body_reading_locations' in row and not isinstance(row['body_reading_locations'], list):
+            raise ValueError('Receipt body_reading_locations must be a list of scoped records')
+        scholarly_identifier(row)
+
+
 def structural_audit(tex: str, bib: dict, records: list, receipts: list) -> dict:
+    if any(type(row.get('record_located_this_revision')) is not bool for row in receipts):
+        raise ValueError('Receipt location declaration must be a Boolean')
     commands=re.findall(r'\\cite\{([^}]+)\}',tex)
     sentences = re.split(r'(?<=[.!?])\s+', re.sub(r'(?m)^\s*%.*$', '', tex))
     multiple = [sentence for sentence in sentences if len(re.findall(r'\\cite\{', sentence)) > 1]
@@ -133,11 +175,12 @@ def structural_audit(tex: str, bib: dict, records: list, receipts: list) -> dict
 def main() -> None:
     tex=TEX.read_text(encoding='utf-8'); bib=parse_bib(BIB.read_text(encoding='utf-8')); records=json.loads(RECORDS.read_text(encoding='utf-8'))
     receipts=json.loads(RECEIPTS.read_text(encoding='utf-8'))
+    validate_reference_inputs(records, receipts)
     byreceipt={r['citation_key']:r for r in receipts}; shape=structural_audit(tex,bib,records,receipts)
     if not (shape['record_keys_unique'] and shape['receipt_keys_unique'] and shape['receipt_keys_match']):
         raise ValueError('Current records and receipts require unique matching keys')
-    if shape['identifier_errors']:
-        raise ValueError('Invalid scholarly identifier: ' + repr(shape['identifier_errors']))
+    if shape['identifier_errors'] or shape['receipt_identifier_mismatches']:
+        raise ValueError('Invalid or mismatched scholarly identifiers')
     citations=[]; section=''; subsection=''
     for lineno,line in enumerate(tex.splitlines(),1):
         m=re.match(r'\\section\{([^}]+)\}',line)
@@ -163,6 +206,8 @@ def main() -> None:
         audit.append({'reference_number':rec['number'],'citation_key':key,'title':rec['title'],'authors':rec['authors'],'year':rec.get('year',''),'doi':rec.get('doi',''),'scholarly_identifier':scholarly_identifier(rec),'source_locator':rr['locator'],'source_class':rr['source_class'],'local_record_consistency':'PASS' if match else 'FAIL','external_review_status':status,'verification_scope':rr['verification_scope'],'manuscript_location':location,'local_claims':context,'support_status':body_status,'full_text_reviewed':False})
         evidence={'reference':rec,'receipt':rr,'contexts':cs}
         ledger.append({'citation_key':key,'manuscript_location':location,'scholarly_identifier':scholarly_identifier(rec),'source_locator':rr['locator'],'support_paraphrase':context,'evidence_sha256':hashlib.sha256(json.dumps(evidence,sort_keys=True,ensure_ascii=False).encode()).hexdigest(),'verification_status':status})
+    if local_mismatches:
+        raise ValueError('Local bibliographic metadata differs: ' + repr(local_mismatches))
     for path,rows in [(LINE_AUDIT,audit),(LEDGER,ledger)]:
         with path.open('w',newline='',encoding='utf-8') as f:w=csv.DictWriter(f,fieldnames=rows[0]);w.writeheader();w.writerows(rows)
     shape['local_record_mismatches']=local_mismatches
