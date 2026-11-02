@@ -19,6 +19,15 @@ rows: cohorts, verdicts, object counts and bytes, native calls, and summed case
 times. It rejects inconsistent aggregates before producing the paper table;
 the corresponding normal and optimized regressions do not invoke native code.
 
+`evaluation/verify_native_records.py --paper` also checks `generated/adapter-surface.tex`
+against the current static AST/source measurement. Missing, malformed or stale
+display text fails before retained-data derivation; platform line endings are
+normalized. `--write-paper` does not repair that display. This is a current
+paper-consumer check, not a change to historical producer bindings or evidence.
+The complete two-directory package verifier already invokes this `--paper`
+path. Bounded positive and negative controls are in
+`evaluation/test_adapter_surface.py` and require no compiler.
+
 The separate owned-object activity is documented in `owned_native_tool/README.md`
 and `results/owned-native-full-20261014-001`; the complete Linux compiler campaigns
 are in `results/native-execution/`. For retained checksum-locality results,

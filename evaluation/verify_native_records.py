@@ -1,8 +1,10 @@
 """Verify published native data without compilers, host execution or network.
 
 The default is read-only, apart from temporary data-only rederivation. Explicit
---paper checks current TeX bindings; --write-paper regenerates only the two
-changed TeX inputs. Historical generators and native-triggering paths are not
+--paper checks current TeX bindings, including the consumed adapter-surface
+table against current AST/source measurements. --write-paper regenerates only
+the two historical numerical TeX inputs, never the adapter-surface display.
+Historical generators and native-triggering paths are not
 modified or invoked. This is not another native campaign.
 """
 from pathlib import Path, PurePosixPath
@@ -29,6 +31,17 @@ def key(row): return tuple(row[k] for k in ('host','carrier','defect_id','relati
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+def verify_adapter_surface(paper):
+    """Check the current display consumer, not historical producer identities.
+
+    Match the existing paper-input text comparison: platform line endings are
+    normalized, but missing, malformed, stale or otherwise changed text fails.
+    """
+    from adapter_surface import table
+    path=paper/'generated/adapter-surface.tex'
+    require(path.read_text(encoding='utf-8')==table(),
+            'Current paper input differs: adapter-surface.tex')
 
 def git_blob(path):
     data=path.read_bytes()
@@ -148,6 +161,8 @@ def main():
                         help='Explicit preserved v2 input root for historical-source binding; does not certify current code')
     args=parser.parse_args()
     if args.write_paper and args.paper is None: parser.error('--write-paper requires --paper')
+    if args.paper is not None:
+        verify_adapter_surface(args.paper)
     binding=json.loads((DATA/'native-inputs.json').read_text(encoding='utf-8'))
     source=verify_native_source_binding(binding,source_root=args.source_root.resolve() if args.source_root else None)
     spec=importlib.util.spec_from_file_location('native_data_derive',ROOT/'scripts/derive_admission_study.py')
@@ -224,6 +239,8 @@ def main():
                           certifies_v3_native_execution=False,
                           matrix_rows={k:len(v) for k,v in matrices.items()},
                           canonical_mirror_field_comparisons=len(a)*len(fields),
-                          paper_checked=args.paper is not None,paper_write_requested=args.write_paper),indent=2))
+                          paper_checked=args.paper is not None,
+                          adapter_surface_checked=args.paper is not None,
+                          paper_write_requested=args.write_paper),indent=2))
 
 if __name__=='__main__': main()
