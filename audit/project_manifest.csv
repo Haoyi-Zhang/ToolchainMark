@@ -261,6 +261,7 @@ artifact/results/native-execution/source-snapshot/src/tosem02/catalog.py,5b0b0bb
 artifact/results/native-execution/source-snapshot/src/tosem02/cli.py,42ffba79ad7f9fcb828ec6063b3e789693b4d5e6a544c909796fd76df8674433,3977,0644
 artifact/results/native-execution/source-snapshot/src/tosem02/evidence_catalog.py,1df0ff44a8ca1060e3e48078be2eb4fde28656628068c754b76b10107db36f39,1335,0644
 artifact/results/native-execution/source-snapshot/src/tosem02/recheck.py,9f7d18a6ba46588396f5c1fb2790a8966a75f8abe579d50ecfd2a3b6850ef23b,10203,0644
+artifact/results/native-execution/source-snapshot/tests/test_followup_classification.py,29bb0d6ecfe6bcb93b174a3cfa43f96d2a341ce9dbbfdf3e553e43316d818e16,7643,0644
 artifact/results/native-linux/evidence.zip,0f6e402bd54ed7765722d156fc3c3a22fbb0578ff8308788d87eb3b22fbe4e4a,573700,0644
 artifact/results/native-linux/native-environment.json,09c1dd7ce42bfa109e9ed8328d04b47d84437f3819b564d7c163c415e7d7b24d,492,0644
 artifact/results/native-linux/native-study/derived/admission_failures.csv,addef4eefece65bf50851ca2571ea088d3c8c3065cd0e1da918d1f93c96710a5,159,0644
