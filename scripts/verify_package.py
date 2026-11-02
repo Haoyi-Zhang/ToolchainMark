@@ -319,7 +319,7 @@ def check_references(root: Path):
         tex = (paper / "main.tex").read_text(encoding="utf-8")
         bib = module.parse_bib((paper / "references.bib").read_text(encoding="utf-8"))
         records = json.loads((paper / "evidence/reference_records.json").read_text(encoding="utf-8"))
-        receipts = json.loads((paper / "evidence/reference_review_current.json").read_text(encoding="utf-8"))
+        receipts = json.loads((root / "artifact/evidence/reference_review_current.json").read_text(encoding="utf-8"))
         shape = module.structural_audit(tex, bib, records, receipts)
         keys = [r["citation_key"] for r in records]
         receipt_keys = [r["citation_key"] for r in receipts]
