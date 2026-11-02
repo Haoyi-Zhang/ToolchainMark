@@ -63,7 +63,9 @@ class CurrentDerivationTests(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()) as stdout, self.assertRaises(SystemExit) as raised:
                 cli.main()
             self.assertEqual(raised.exception.code,0)
-            self.assertIn('legacy retained-evidence checks',stdout.getvalue())
+            self.assertIn('two-directory publication checkout',stdout.getvalue())
+            self.assertIn('not',stdout.getvalue())
+            self.assertIn('bundled wheel data',stdout.getvalue())
             self.assertNotIn('draft authorship',stdout.getvalue())
             recheck.assert_not_called()
 
@@ -102,7 +104,7 @@ class CurrentDerivationTests(unittest.TestCase):
                 self.assertEqual(Path(command[command.index('--rerun')+1]).read_bytes(),b'second-owned-data\n')
                 self.assertEqual(Path(command[command.index('--out')+1]),output.resolve())
                 return subprocess.CompletedProcess(command,0)
-            with patch('tosem02.cli.artifact_root',return_value=root), \
+            with patch('tosem02.cli.checkout_root',return_value=root), \
                  patch.object(sys,'argv',['cli','derive','--out',str(output)]), \
                  patch('tosem02.cli.subprocess.run',side_effect=stub):
                 cli.main()

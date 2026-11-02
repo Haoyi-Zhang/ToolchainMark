@@ -4,6 +4,7 @@ import gzip
 import importlib.util
 import io
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -338,6 +339,12 @@ class PackageIntegrityTests(unittest.TestCase):
                     "host_calls": [], "host_reference_differences": 0,
                     "direct_integrity_verdict": None, "case_seconds": 0.0, "case_cpu_seconds": 0.0,
                 }) + "\n")
+            # Empty native builds/calls are no longer an admissible positive
+            # fixture. The stronger receiver must reject this old hollow row.
+            self.assertFalse(PACKAGE.check_archives(self.root)[0])
+            retained = SCRIPT.parents[1] / 'results/owned-native-small-20261014-001'
+            shutil.copyfile(retained / 'raw.jsonl.gz', path)
+            shutil.copyfile(retained / 'summary.json', summary)
             self.assertTrue(PACKAGE.check_archives(self.root)[0])
             summary.write_text(json.dumps({"rows": 2, "verdicts": {"SATISFIED": 2}}),
                                encoding="utf-8")
