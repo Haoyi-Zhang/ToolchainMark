@@ -319,7 +319,7 @@ def check_references(root: Path):
         tex = (paper / "main.tex").read_text(encoding="utf-8")
         bib = module.parse_bib((paper / "references.bib").read_text(encoding="utf-8"))
         records = json.loads((paper / "evidence/reference_records.json").read_text(encoding="utf-8"))
-        receipts = json.loads((root / "artifact/evidence/reference_review_current.json").read_text(encoding="utf-8"))
+        receipt_path, receipts = module.load_receipts()
         module.validate_reference_inputs(records, receipts)
         shape = module.structural_audit(tex, bib, records, receipts)
         keys = [r["citation_key"] for r in records]
@@ -338,6 +338,7 @@ def check_references(root: Path):
             not shape["receipt_identifier_mismatches"] and metadata
         )
         return required_shape, {"records": len(records), "citations": shape["citation_commands"],
+                                "receipt": receipt_path.relative_to(root).as_posix(),
                                 "fresh_record_checks_reported_by_receipts": shape["fresh_record_checks"],
                                 "external_support_certified": False}
     except (OSError, UnicodeError, ValueError, KeyError, IndexError,
@@ -414,6 +415,20 @@ def check_paper_dependencies(root: Path):
                 item = item.strip()
                 if command == "input" and item in EXTERNAL_TEX_INPUTS:
                     continue
+                # Only graphics may cross into the packaged artifact. A safe
+                # suffix path must remain within that directory after resolve.
+                artifact_prefix = "../artifact/figures/"
+                if command == "includegraphics" and item.startswith(artifact_prefix):
+                    tail = item[len(artifact_prefix):]
+                    figures = root / "artifact" / "figures"
+                    target = figures / tail
+                    if (not safe_manifest_path(tail) or
+                            target.suffix.lower() not in {".pdf", ".png", ".jpg", ".jpeg"} or
+                            not target.resolve().is_relative_to(figures.resolve())):
+                        unsafe.append(source.relative_to(paper).as_posix() + ":" + item)
+                    elif not target.is_file() or target.stat().st_size == 0:
+                        missing.append(item)
+                    continue
                 relative = PurePosixPath(item)
                 if not safe_manifest_path(item):
                     unsafe.append(source.relative_to(paper).as_posix() + ":" + item)
@@ -445,7 +460,11 @@ def run_readonly_check(artifact: Path, script: str, extra: list[str]):
         completed = subprocess.run(
             [sys.executable, "-B", str(artifact / script), *extra],
             cwd=artifact, env=env, text=True, capture_output=True, timeout=120, check=False)
-        report = json.loads(completed.stdout)
+        try:
+            report = json.loads(completed.stdout)
+        except ValueError:
+            return False, {"exit": completed.returncode, "error": "Child did not return a JSON report",
+                           "stderr": completed.stderr[-1600:]}
         passed = completed.returncode == 0 and report.get("verdict") == "PASS"
         if script == "evaluation/verify_native_records.py":
             passed = passed and report.get("paper_checked") is True and \
