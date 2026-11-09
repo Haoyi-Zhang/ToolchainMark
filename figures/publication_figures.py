@@ -141,7 +141,7 @@ def sensitivity(out,preview):
                  right=14 if key=='fixed' else 49)
         if key=='holdout':
             a.text(1.065,1.025,'Count',transform=a.transAxes,
-                   ha='left',va='bottom',fontsize=7.5,color=MUTED)
+                   ha='left',va='bottom',fontsize=9.0,color=MUTED)
         for i,row in enumerate(rr):
             v=float(100*Fraction(int(row['exposed']),int(row['planned'])))
             y=len(rr)-i
@@ -150,10 +150,10 @@ def sensitivity(out,preview):
                    ms=3.6,mfc=BLUE if v else 'white',mew=.8,clip_on=False)
             count=f"{row['exposed']}/{row['planned']}"
             if key=='fixed':
-                a.annotate(count,(v,y),xytext=(-2,4),ha='right',textcoords='offset points',fontsize=8.2)
+                a.annotate(count,(v,y),xytext=(-2,4),ha='right',textcoords='offset points',fontsize=9.1)
             else:
                 a.text(1.065,y,count,transform=a.get_yaxis_transform(),ha='left',
-                       va='center',fontsize=8.7,color=AMBER if not v else INK)
+                       va='center',fontsize=9.2,color=AMBER if not v else INK)
         a.set(xlim=(-6 if key=='holdout' else 0,100),yticks=range(1,len(rr)+1),yticklabels=[r['label'] for r in rr[::-1]],
               ylim=(.7,len(rr)+.52),
               xticks=[0,50,100],xticklabels=['0','50','100'],xlabel='Exposed units (%)')
@@ -171,8 +171,7 @@ def clause_coverage(out,preview):
     d.text(237,98,r'Relation $R_1$',9.6,weight='bold')
     d.text(316,98,r'Relation $R_2$',9.6,weight='bold')
     d.text(408,98,'Domain',9.6,ha='right',weight='bold')
-    d.band(8,65,404,20,LIGHT)
-    d.band(8,15,404,47,MINT)
+    d.rule(8,89,412,89,c=RULE,lw=.65)
     for y,label,hits,group in ((75,'Both clauses',(True,True),'Observed'),
                               (49,'Only clause 1',(True,False),'Possible'),
                               (26,'Only clause 2',(False,True),'Possible')):

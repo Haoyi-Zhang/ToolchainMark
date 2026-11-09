@@ -26,20 +26,19 @@ def motivating_counterexample():
 
 def trace_model():
     d=Diagram(428,133)
-    nodes=[(105,'Embed','code'),(170,'Compile','graph'),(235,'Transform','patch'),
-           (300,'Execute','trace'),(366,'Extract','lens')]
+    nodes=[(105,'Embed'),(170,'Compile'),(235,'Transform'),
+           (300,'Execute'),(366,'Extract')]
     for y,lab,c in [(79,r'Source $\tau_s$',S),(50,r'Follow-up $\tau_f$',T)]:
         d.txt(14,y,lab,9.4,ha='left',color=c)
-        for (x,_,_),(x2,_,_) in zip(nodes,nodes[1:]):
+        for (x,_),(x2,_) in zip(nodes,nodes[1:]):
             d.wire((x+4,y),(x2-5,y),c=c)
-        for x,_,_ in nodes:d.dotmark(x,y,3.5,c=c)
-    for x,label,ic in nodes:
-        d.txt(x,122,label,9.3,bold=True)
-        d.mark(ic,x,102,19,S)
+        for x,_ in nodes:d.dotmark(x,y,3.5,c=c)
+    for x,label in nodes:
+        d.txt(x,101,label,9.7,bold=True)
     for x in (170,366):
         d.wire((x,74),(x,55),c=F,dash=True,arrow=False)
-        d.wire((x,45),(x,28),(258 if x<250 else 281,28),c=T)
-    d.mark('keyed',269,28,18,T)
+        d.wire((x,45),(x,31),(255 if x<250 else 283,31),c=T)
+    d.dotmark(269,31,3,c=T,fill=T)
     d.txt(269,11,r'Compare $O_R(\tau_s)$ and $O_R(\tau_f)$',9.4,color=T)
     return d
 
@@ -74,22 +73,24 @@ def evaluation_design():
     d.tag(10,123,'(a) Subject replay')
     d.tag(151,123,'(b) Carrier holdout')
     d.tag(287,123,'(c) Mechanism holdout')
-    d.dotmark(25,82,4,c=S,fill=S)
-    d.wire((33,82),(62,82),c=S)
-    for j in range(17):
-        d.dotmark(72+(j%9)*6.2,88-(j//9)*12,2.15,c=T)
-    d.txt(69,53,'1 reference / 17 replay',8.8)
-    d.txt(69,34,'Same carrier + mechanism',8.45)
-    for x in (162,181):d.block(x,77,9,9,S,L)
-    d.wire((195,81.5),(223,81.5),c=S)
-    d.block(229,77,9,9,A,O)
-    d.txt(203,53,'Two select / one held out',8.8)
-    d.txt(203,34,'All 24 mechanisms',8.45)
-    d.txt(317,82,r'$M\setminus H$',10.5,color=S)
-    d.wire((339,82),(368,82),c=S)
-    d.txt(383,82,r'$H$',10.5,color=A)
-    d.txt(347,53,'Hold out a mechanism',8.8)
-    d.txt(347,34,'All three carriers',8.45)
+    d.txt(30,79,'1 subject',10.3,color=S)
+    d.wire((54,79),(76,79),c=S)
+    d.txt(104,79,'17 subjects',10.3,color=T)
+    d.txt(30,61,'Design',9.2,color=G)
+    d.txt(104,61,'Replay',9.2,color=G)
+    d.txt(68,31,'Fix carrier and mechanism',9.1)
+    for x in (159,176):d.block(x,74,12,10,S,'white')
+    d.wire((196,79),(222,79),c=S)
+    d.block(230,74,12,10,A,'white')
+    d.txt(173,59,'Select',9.2,color=S)
+    d.txt(236,59,'Hold out',9.2,color=A)
+    d.txt(203,31,'Fix all 24 mechanisms',9.1)
+    d.txt(311,79,r'$M\setminus H$',10.5,color=S)
+    d.wire((339,79),(368,79),c=S)
+    d.txt(383,79,r'$H$',10.5,color=A)
+    d.txt(311,59,'Select',9.2,color=S)
+    d.txt(383,59,'Hold out',9.2,color=A)
+    d.txt(347,31,'Fix all three carriers',9.1)
     return d
 
 
@@ -116,14 +117,14 @@ def snapshot_coherence():
 def rejection_taxonomy():
     d=Diagram(420,69)
     d.mark('trace',25,34,22,S);d.txt(43,34,'Observation',9.3,ha='left')
-    d.wire((96,34),(135,34),c=S)
+    d.wire((100,34),(135,34),c=S)
     d.diamond(143,34,6,S)
     d.wire((149,34),(164,34),(164,54),(209,54),c=T)
     d.wire((164,34),(164,14),(209,14),c=A,dash=True)
     d.txt(219,54,'Typed response',9.1,ha='left')
     d.txt(219,14,'Infrastructure failure',9.0,ha='left')
     d.wire((303,54),(330,54),c=T)
-    d.wire((303,14),(330,14),c=A,dash=True)
+    d.wire((311,14),(330,14),c=A,dash=True)
     d.txt(340,54,'Test relation',8.8,ha='left',color=T)
     d.txt(340,14,'Inadmissible',8.8,ha='left',color=A)
     return d
