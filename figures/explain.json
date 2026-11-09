@@ -1,0 +1,90 @@
+[
+  {
+    "id": "carrier-record-fields",
+    "kind": "route",
+    "rows": [
+      {
+        "name": "",
+        "nodes": [
+          [
+            "Header|Magic, version",
+            "file"
+          ],
+          [
+            "Binding|Key tag, length",
+            "key"
+          ],
+          [
+            "Body|Payload, checksum",
+            "binary"
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "id": "admission-vs-attribution",
+    "kind": "fork",
+    "source": [
+      "Required|admission facts",
+      "gate"
+    ],
+    "outcomes": [
+      [
+        [
+          "Evaluate predicate|Satisfied or inconsistent",
+          "compare"
+        ],
+        "All hold"
+      ],
+      [
+        [
+          "Inadmissible|No inconsistency claim",
+          "reject",
+          "risk"
+        ],
+        "False or unavailable"
+      ]
+    ]
+  },
+  {
+    "id": "integrity-admission-controls",
+    "kind": "route",
+    "rows": [
+      {
+        "name": "Retained rule",
+        "nodes": [
+          [
+            "9 cases",
+            "trace"
+          ],
+          [
+            "Retained gate",
+            "gate"
+          ],
+          [
+            "9 admitted",
+            "accept"
+          ]
+        ]
+      },
+      {
+        "name": "Strengthened rule",
+        "nodes": [
+          [
+            "Same 9 cases",
+            "trace"
+          ],
+          [
+            "Checksum-only|intervention",
+            "gate"
+          ],
+          [
+            "3 admitted|6 inadmissible",
+            "compare"
+          ]
+        ]
+      }
+    ]
+  }
+]
