@@ -1,0 +1,14 @@
+{
+  "venue": "tosem",
+  "figures": [
+    {
+      "name": "carrier-locations"
+    },
+    {
+      "name": "removal-gates"
+    },
+    {
+      "name": "rejection-taxonomy"
+    }
+  ]
+}

@@ -24,6 +24,10 @@ jobs:
           python-version: '3.12'
       - name: Regenerate direct vector schematics
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends texlive-fonts-extra texlive-fonts-extra-links
+          kpsewhich LinLibertine_R.otf
+          kpsewhich LibertinusMath-Regular.otf
           python -m pip install -r figures/requirements.txt
           python -B figures/build_figures.py --outdir "$RUNNER_TEMP/direct-figures"
       - name: Check owned finite models and rederive retained measurements
