@@ -75,10 +75,10 @@ def external(out,preview):
                   linewidths=.85,zorder=3)
         a.scatter(z,y,marker='s',s=11,c=AMBER,linewidths=.4,zorder=4)
     a.set(xlim=(-.35,10.55),ylim=(-.48,2.48),xticks=[0,2,4,6,8,10],yticks=[2,1,0],
-          yticklabels=[labels[r['case']] for r in rows],xlabel='Satisfied configurations (out of 10 per pair)')
+          yticklabels=[labels[r['case']] for r in rows],xlabel='Configurations passing each check (out of 10)')
     a.scatter([],[],marker='o',s=39,facecolors='white',edgecolors=BLUE,
-              linewidths=.85,label='Exit only')
-    a.scatter([],[],marker='s',s=11,c=AMBER,linewidths=.4,label='Host output')
+              linewidths=.85,label='Exit-status check')
+    a.scatter([],[],marker='s',s=11,c=AMBER,linewidths=.4,label='Output agreement')
     a.legend(ncol=2,loc='lower left',bbox_to_anchor=(0,1.02),fontsize=9)
     grid(a,'x');save(f,out,'external-transfer',preview)
 
@@ -95,8 +95,8 @@ def native(out,preview):
         vals=[cohorts[k].get(key,0) for k in ['clean-workflow','integrity-challenge']]
         a.barh([1,0],vals,left=left,height=.48,color=c,edgecolor='white',hatch=hatch,label=label)
         for y,(x,n) in enumerate(zip(left,vals)):
-            if n:a.text(x+n/2,1-y+.35,str(n),color=c,va='center',ha='center',fontsize=8.6,fontweight='bold')
-    a.set(xlim=(0,400),ylim=(-.34,1.55),yticks=[1,0],
+            if n:a.text(x+n/2,1-y+.40,str(n),color=c,va='center',ha='center',fontsize=8.6,fontweight='bold')
+    a.set(xlim=(0,400),ylim=(-.34,1.60),yticks=[1,0],
           yticklabels=['Clean workflow','Integrity challenges'],xlabel='Retained relation checks (count)')
     a.legend(loc='lower left',bbox_to_anchor=(-.01,1.04),ncol=3,fontsize=8.5)
     save(f,out,'native-admission',preview)
@@ -119,47 +119,68 @@ def transition(out,preview):
         a.barh([1,0],vals,left=offsets,color=c,edgecolor='white',linewidth=.5,hatch=hatch,
                height=.48,label=label)
         offsets=[x+y for x,y in zip(offsets,vals)]
-    a.set(xlim=(0,100),ylim=(-.5,1.5),xticks=(0,25,50,75,100),yticks=[1,0],
+    a.set(xlim=(0,100),ylim=(-.73,1.5),xticks=(0,25,50,75,100),yticks=[1,0],
           yticklabels=[f'Earlier fail · {totals[0]:,}',f'Earlier pass · {totals[1]:,}'],
           xlabel='Share within the earlier outcome (%)')
     a.legend(ncol=3,loc='lower left',bbox_to_anchor=(0,1.04),fontsize=8.7)
     a.tick_params(axis='y',length=0)
-    f.text(.264,.072,'270 earlier passes used the wrong rejection kind.',
-           color=AMBER,fontsize=8.9)
+    head=100*(540+270/2)/totals[1]
+    a.annotate('270 cases with the wrong rejection kind',xy=(head,-.25),xytext=(14,-.50),
+               textcoords='data',ha='left',va='center',fontsize=8.6,color=AMBER,
+               arrowprops=dict(arrowstyle='-',color=AMBER,lw=.7,shrinkA=3,shrinkB=1))
     grid(a,'x')
     save(f,out,'protocol-transition',preview)
 
 def sensitivity(out,preview):
     with (HERE/'results-overview.csv').open(encoding='utf8',newline='') as f:
         rows=list(csv.DictReader(f))
-    for key,w,h in [('fixed',184,115),('holdout',198,150)]:
-        rr=[r for r in rows if r['panel']==key]
-        assert len(rr)==(4 if key=='fixed' else 12)
-        if key=='fixed':assert [int(r['exposed']) for r in rr]==[21,27,33,69]
-        if key=='holdout':assert sum(int(r['exposed'])==0 for r in rr)==5
-        f,a=plot(w,h,left=75 if key=='fixed' else 73,bottom=29,top=15 if key=='holdout' else 9,
-                 right=14 if key=='fixed' else 49)
-        if key=='holdout':
-            a.text(1.065,1.025,'Count',transform=a.transAxes,
-                   ha='left',va='bottom',fontsize=9.0,color=MUTED)
-        for i,row in enumerate(rr):
-            v=float(100*Fraction(int(row['exposed']),int(row['planned'])))
-            y=len(rr)-i
-            a.hlines(y,0,v,color=TEAL,lw=1.2)
-            a.plot(v,y,marker='o' if v else 's',color=AMBER if v==0 else BLUE,
-                   ms=3.6,mfc=BLUE if v else 'white',mew=.8,clip_on=False)
-            count=f"{row['exposed']}/{row['planned']}"
-            if key=='fixed':
-                a.annotate(count,(v,y),xytext=(-2,4),ha='right',textcoords='offset points',fontsize=9.1)
-            else:
-                a.text(1.065,y,count,transform=a.get_yaxis_transform(),ha='left',
-                       va='center',fontsize=9.2,color=AMBER if not v else INK)
-        a.set(xlim=(-6 if key=='holdout' else 0,100),yticks=range(1,len(rr)+1),yticklabels=[r['label'] for r in rr[::-1]],
-              ylim=(.7,len(rr)+.52),
-              xticks=[0,50,100],xticklabels=['0','50','100'],xlabel='Exposed units (%)')
-        a.xaxis.label.set_fontsize(8.8)
-        a.tick_params(axis='y',length=0,labelsize=8.6)
-        grid(a,'x');save(f,out,'results-overview-'+key,preview)
+    fixed=[r for r in rows if r['panel']=='fixed']
+    held=[r for r in rows if r['panel']=='holdout']
+    assert [(int(r['exposed']),int(r['planned'])) for r in fixed]==[(x,72) for x in (21,27,33,69)]
+    assert len({r['identity'] for r in held})==len(held)==12
+    value=lambda r:Fraction(int(r['exposed']),int(r['planned']))
+    label=lambda r:f"{r['exposed']}/{r['planned']}"
+    assert all(0<=value(r)<=1 for r in held)
+    full,none,partial=([r for r in held if rule(value(r))] for rule in
+                       (lambda x:x==1,lambda x:x==0,lambda x:0<x<1))
+    assert (len(full),len(none),len(partial))==(6,5,1)
+
+    f,a=plot(184,149.8,left=68,bottom=34,top=24,right=42)
+    a.text(1.25,1.052,'Exposed\n/ planned',transform=a.transAxes,
+           ha='center',va='bottom',fontsize=8.4,linespacing=1.02,color=MUTED)
+    a.spines['left'].set_visible(False)
+    for y,row in zip((4,3,2,1),fixed):
+        v=float(100*value(row))
+        a.hlines(y,0,v,color=TEAL,lw=.72,alpha=.67)
+        a.plot(v,y,'o',color=BLUE,ms=4.1,zorder=3)
+        a.text(1.25,y,label(row),transform=a.get_yaxis_transform(),
+               ha='center',va='center',fontsize=9.1,color=INK)
+    a.set(xlim=(-3,103),yticks=(1,2,3,4),yticklabels=[r['label'] for r in fixed[::-1]],
+          ylim=(.45,4.56),xticks=(0,50,100),xlabel='Exposed units (%)')
+    a.tick_params(axis='y',length=0,labelsize=9.0,pad=3)
+    a.xaxis.label.set_fontsize(8.8)
+    grid(a,'x')
+    save(f,out,'results-overview-fixed',preview)
+
+    # Most held-out classes are at an endpoint. Use exact counts in adjacent
+    # groups rather than twelve near-identical lollipops on a compressed axis.
+    d=Plate(198,150)
+    for group,left,right,title,color,symbol in [
+            (full,5,94,'All exposed (100%)',TEAL,'o'),
+            (none,106,194,'None exposed (0%)',AMBER,'x')]:
+        d.ax.plot(left+3,128,symbol,color=color,ms=4.0,mew=.9)
+        d.text(left+10,128,title,8.9,ha='left',color=color,weight='bold')
+        for y,row in zip((109,95,81,67,53,39),group):
+            d.text(left,y,row['label'],8.7,ha='left')
+            d.text(right,y,label(row),8.6,ha='right',color=MUTED)
+    d.rule(100,36,100,133,c=RULE,lw=.6)
+    d.rule(5,28,194,28,c=RULE,lw=.6)
+    row,=partial
+    d.ax.plot(8,15,'D',color=BLUE,ms=3.6)
+    d.text(15,15,'Partly exposed',8.8,ha='left',color=BLUE,weight='bold')
+    d.text(96,15,row['label'],8.9,ha='left')
+    d.text(194,15,f'{label(row)}  ({100*float(value(row)):.1f}%)',8.8,ha='right',color=INK)
+    d.save(out,'results-overview-holdout',preview)
 
 def evaluation(out,preview):
     from diagram_ink import emit

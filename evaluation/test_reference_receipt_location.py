@@ -1,6 +1,5 @@
 """Reference consumers must use the artifact's current receipt, fail closed."""
 import importlib.util
-import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -53,29 +52,6 @@ class ReferenceReceiptLocationTests(unittest.TestCase):
         current.rename(self.root/'paper/evidence/reference_review_current.json')
         ok, details = PACKAGE.check_references(self.root)
         self.assertFalse(ok, details)
-
-    def test_companion_receipts_require_exact_bibliography_and_preserve_canonical(self):
-        canonical = self.root/'artifact/evidence/reference_review_current.json'
-        original = canonical.read_bytes()
-        bibliography = self.root/'paper/references.bib'
-        companion = canonical.with_name('reference_review_companion.json')
-        contents = {'bibliography_sha256': hashlib.sha256(bibliography.read_bytes()).hexdigest(),
-                    'receipts': json.loads(original)}
-        companion.write_text(json.dumps(contents), encoding='utf-8')
-        ok, details = PACKAGE.check_references(self.root)
-        self.assertTrue(ok, details)
-        self.assertTrue(details['receipt'].endswith(companion.name))
-        completed = subprocess.run(
-            [sys.executable, '-B', str(self.root/'artifact/scripts/audit_references.py')],
-            capture_output=True, text=True, encoding='utf-8', timeout=15)
-        self.assertEqual(0, completed.returncode, completed.stderr)
-        self.assertTrue((self.root/'paper/reference_support.csv').is_file())
-        self.assertFalse((self.root/'artifact/citation_support.csv').exists())
-        self.assertEqual(original, canonical.read_bytes())
-        bibliography.write_bytes(bibliography.read_bytes()+b'\n')
-        ok, details = PACKAGE.check_references(self.root)
-        self.assertTrue(ok, details)
-        self.assertTrue(details['receipt'].endswith(canonical.name))
 
     def test_duplicate_current_receipt_rejects(self):
         path = self.root/'artifact/evidence/reference_review_current.json'

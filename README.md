@@ -1,18 +1,5 @@
 # Contract-aware watermark validation artifact
 
-## Rebuilding the explanatory diagrams
-
-Create an output directory, then run `python -B figures/rebuild_diagrams.py --output /path/to/figures`
-from the artifact root. This regenerates the explanatory vector PDFs without
-running an experiment or requiring the manuscript. In the collaboration bundle,
-the same command without `--output` updates the diagram targets consumed by the
-sibling `paper/` directory. Other plots have their own generators and inputs.
-
-The repository's reference receipts and native observations are retained as
-recorded. The collaboration draft's bibliography is checked against its own
-byte-bound receipt set, without reassigning repository citation positions or
-treating inherited checks as new full-text reviews.
-
 ## Installation and checkout boundary
 
 `python -m pip install .` installs the dependency-free Python modules and the

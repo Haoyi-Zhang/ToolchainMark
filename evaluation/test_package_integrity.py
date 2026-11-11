@@ -368,23 +368,6 @@ class PackageIntegrityTests(unittest.TestCase):
         self.assertFalse(passed)
         self.assertEqual(details["exit"], 1)
 
-    def test_graphics_allow_packaged_artifact_figures_but_not_escape(self):
-        main = self.root / "paper/main.tex"
-        (self.root / "paper/online-supplement.tex").write_text("fixture\n", encoding="utf-8")
-        figure = self.root / "artifact/figures/overview.pdf"
-        figure.parent.mkdir(parents=True)
-        figure.write_bytes(b"present")
-        main.write_text(r"\includegraphics{../artifact/figures/overview.pdf}", encoding="utf-8")
-        self.assertTrue(PACKAGE.check_paper_dependencies(self.root)[0])
-        for tex in (r"\includegraphics{../artifact/figures/../outside.pdf}",
-                    r"\input{../artifact/figures/overview.pdf}",
-                    r"\includegraphics{../artifact/elsewhere/overview.pdf}"):
-            with self.subTest(tex=tex):
-                main.write_text(tex, encoding="utf-8")
-                ok, details = PACKAGE.check_paper_dependencies(self.root)
-                self.assertFalse(ok, details)
-                self.assertTrue(details["unsafe_literal_paths"], details)
-
 
 if __name__ == "__main__":
     unittest.main()

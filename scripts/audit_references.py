@@ -16,7 +16,6 @@ TEX = PAPER / 'main.tex'
 BIB = PAPER / 'references.bib'
 RECORDS = PAPER / 'evidence' / 'reference_records.json'
 RECEIPTS = ARTIFACT / 'evidence' / 'reference_review_current.json'
-COMPANION_RECEIPTS = ARTIFACT / 'evidence' / 'reference_review_companion.json'
 LEDGER = ARTIFACT / 'citation_support.csv'
 SHAPE = PAPER / 'citation_shape_audit.json'
 VERIFY = PAPER / 'reference_verification_audit.json'
@@ -25,20 +24,6 @@ LINE_AUDIT = PAPER / 'reference_line_by_line_audit.csv'
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def load_receipts():
-    """Use companion evidence only for the bibliography bytes it binds."""
-    if COMPANION_RECEIPTS.is_file():
-        companion = json.loads(COMPANION_RECEIPTS.read_text(encoding='utf-8'))
-        if not isinstance(companion, dict) or not isinstance(companion.get('receipts'), list):
-            raise ValueError('Malformed companion reference receipt')
-        identity = companion.get('bibliography_sha256')
-        if not isinstance(identity, str) or not re.fullmatch(r'[0-9a-f]{64}', identity):
-            raise ValueError('Missing or invalid companion bibliography binding')
-        if identity == sha256(BIB):
-            return COMPANION_RECEIPTS, companion['receipts']
-    return RECEIPTS, json.loads(RECEIPTS.read_text(encoding='utf-8'))
 
 
 def strip_tex(text: str) -> str:
@@ -189,7 +174,7 @@ def structural_audit(tex: str, bib: dict, records: list, receipts: list) -> dict
 
 def main() -> None:
     tex=TEX.read_text(encoding='utf-8'); bib=parse_bib(BIB.read_text(encoding='utf-8')); records=json.loads(RECORDS.read_text(encoding='utf-8'))
-    receipt_path,receipts=load_receipts()
+    receipts=json.loads(RECEIPTS.read_text(encoding='utf-8'))
     validate_reference_inputs(records, receipts)
     byreceipt={r['citation_key']:r for r in receipts}; shape=structural_audit(tex,bib,records,receipts)
     if not (shape['record_keys_unique'] and shape['receipt_keys_unique'] and shape['receipt_keys_match']):
@@ -223,13 +208,12 @@ def main() -> None:
         ledger.append({'citation_key':key,'manuscript_location':location,'scholarly_identifier':scholarly_identifier(rec),'source_locator':rr['locator'],'support_paraphrase':context,'evidence_sha256':hashlib.sha256(json.dumps(evidence,sort_keys=True,ensure_ascii=False).encode()).hexdigest(),'verification_status':status})
     if local_mismatches:
         raise ValueError('Local bibliographic metadata differs: ' + repr(local_mismatches))
-    ledger_path=PAPER/'reference_support.csv' if receipt_path==COMPANION_RECEIPTS else LEDGER
-    for path,rows in [(LINE_AUDIT,audit),(ledger_path,ledger)]:
+    for path,rows in [(LINE_AUDIT,audit),(LEDGER,ledger)]:
         with path.open('w',newline='',encoding='utf-8') as f:w=csv.DictWriter(f,fieldnames=rows[0]);w.writeheader();w.writerows(rows)
     shape['local_record_mismatches']=local_mismatches
     shape['structural_verdict']='PASS' if not(local_mismatches or shape['receipt_identifier_mismatches'] or shape['multi_key_commands'] or shape['adjacent_citation_piles'] or shape['sentences_with_multiple_citation_commands'] or shape['numeric_citation_ranges'] or shape['uncited_bibliography_keys'] or shape['missing_bibliography_keys']) and shape['metadata_record_keys_match'] and shape['record_keys_unique'] and shape['receipt_keys_unique'] and shape['receipt_keys_match'] and shape['scholarly_identifiers_unique'] else 'FAIL'
     SHAPE.write_text(json.dumps(shape,indent=2)+'\n',encoding='utf-8')
-    report={'schema_version':'current-evidence-separated','record_count':len(records),'unique_scholarly_identifiers':len({scholarly_identifier(r) for r in records}),'doi_record_count':shape['doi_record_count'],'primary_repository_record_count':shape['primary_repository_record_count'],'current_receipts':receipt_path.relative_to(ROOT).as_posix(),'fresh_documented_record_checks':shape['fresh_record_checks'],'inherited_records_not_freshly_reverified':[r['citation_key'] for r in receipts if not r['record_located_this_revision']],'scoped_primary_body_reading_records':[r['citation_key'] for r in receipts if r.get('body_reading_locations')],'source_class_counts':dict(Counter(r['source_class'] for r in receipts)),'structural_verdict':shape['structural_verdict'],'semantic_verdict':'PARTIAL_EXTERNAL_REVIEW_NOT_FULL_TEXT_CERTIFICATION','verification_scope':'Structural bibliography/citation checks are automated. DOI and primary repository identifiers establish identity only. Scoped primary-body reading declarations are retained in current receipts, not independently certified by this script. Inherited receipts are not freshly reverified here. A citation occurrence, matching local record, or hash is not proof of claim support; no universal full-text certification is inferred.','imported_audits':'artifact/results/protocol-history/imported-audits','verdict':'PASS_STRUCTURAL_WITH_DISCLOSED_REVIEW_LIMITS' if shape['structural_verdict']=='PASS' else 'FAIL_STRUCTURAL'}
+    report={'schema_version':'current-evidence-separated','record_count':len(records),'unique_scholarly_identifiers':len({scholarly_identifier(r) for r in records}),'doi_record_count':shape['doi_record_count'],'primary_repository_record_count':shape['primary_repository_record_count'],'current_receipts':'artifact/evidence/reference_review_current.json','fresh_documented_record_checks':shape['fresh_record_checks'],'inherited_records_not_freshly_reverified':[r['citation_key'] for r in receipts if not r['record_located_this_revision']],'scoped_primary_body_reading_records':[r['citation_key'] for r in receipts if r.get('body_reading_locations')],'source_class_counts':dict(Counter(r['source_class'] for r in receipts)),'structural_verdict':shape['structural_verdict'],'semantic_verdict':'PARTIAL_EXTERNAL_REVIEW_NOT_FULL_TEXT_CERTIFICATION','verification_scope':'Structural bibliography/citation checks are automated. DOI and primary repository identifiers establish identity only. Scoped primary-body reading declarations are retained in current receipts, not independently certified by this script. Inherited receipts are not freshly reverified here. A citation occurrence, matching local record, or hash is not proof of claim support; no universal full-text certification is inferred.','imported_audits':'artifact/results/protocol-history/imported-audits','verdict':'PASS_STRUCTURAL_WITH_DISCLOSED_REVIEW_LIMITS' if shape['structural_verdict']=='PASS' else 'FAIL_STRUCTURAL'}
     VERIFY.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8');print(json.dumps(report,indent=2))
     if shape['structural_verdict']!='PASS':raise SystemExit(1)
 
