@@ -41,7 +41,7 @@ def table(file,caption,label,cols,header,data):
  (OUT/file).write_text(text)
 
 table('admission-overview.tex',
-'Three-valued outcomes of the evidence-gated protocol. An inadmissible case contributes to the attempted denominator but never to a fault-exposure numerator.',
+'Evidence-gated outcomes by configuration.',
  'tab:admission-overview','@{}X r r r r@{}',
  'Surface & Attempted & Satisfied & Inconsistent & Inadmissible',[
  ['Clean',n(s['clean_rows']),n(s['clean'].get('SATISFIED',0)),0,0],
@@ -53,18 +53,18 @@ reason_names={'source_payload_recovered':'Source extraction does not recover the
  'source_carrier_valid':'A valid authoritative source carrier cannot be established',
  'carrier_removed':'Absence of an acceptable carrier was not established',
  'integrity_corruption_established':'Corruption did not reach the intended integrity decision'}
-table('admission-reasons.tex','Failed evidence gates in nonclean configurations. Reasons are recorded at the first failed gate, so the rows form a partition rather than overlapping causes.',
+table('admission-reasons.tex','First failed evidence gates.',
  'tab:admission-reasons','@{}X r@{}','First failed gate & Rows',
  [[reason_names[k],n(v)] for k,v in sorted(s['reasons'].items(),key=lambda x:-x[1])])
 labels={'round_trip':'Round trip','host_semantics':'+ host observations','compiler_differential':'+ compiler/optimization comparisons','complete_catalog':'Complete catalog'}
-table('admission-suites.tex','Fixed suites evaluated on the same planned units. Units with no inconsistent admitted relation remain in the denominator.',
+table('admission-suites.tex','Exposure by fixed suite.',
  'tab:admission-suites','@{}X r r@{}','Suite & Design units exposed & All-subject units exposed',
  [[labels[r['suite']],f"{r['design_exposed']}/{r['design_units']}",f"{n(r['expanded_exposed'])}/{n(r['expanded_units'])}"] for r in s['suites']])
-table('admission-relations.tex','Nonclean-configured outcomes by relation, including stage isolation. Each relation has 1,296 attempted nonclean rows; all 54 clean rows per relation are satisfied.',
+table('admission-relations.tex','Nonclean outcomes by relation.',
  'tab:admission-relations','@{}X r r r@{}','Relation & Satisfied & Inconsistent & Inadmissible',
  [[r['relation'].replace('MR',r'\mr{')+'}',n(int(r['satisfied'])),n(int(r['inconsistent'])),n(int(r['inadmissible']))] for r in rows('relation_outcomes.csv')])
 classes=rows('class_holdout.csv')
-table('admission-class-holdout.tex','Fault-class holdout: relations are selected without the named class on the design subject, then evaluated on that class on the other 17 subjects.',
+table('admission-class-holdout.tex','Sensitivity by withheld fault class.',
  'tab:current-class-holdout','@{}X r r r@{}','Withheld class & Planned units & Exposed & Sensitivity',
  [[r['fault_class'].capitalize(),n(int(r['test_units'])),n(int(r['exposed'])),f"{float(r['sensitivity'])*100:.1f}\\%"] for r in classes])
 # A genuine data comparison, not a chart of unlike quantities on a shared axis.

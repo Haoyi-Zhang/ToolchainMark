@@ -143,7 +143,7 @@ def paper_inputs(summary):
     }
     macros='% Derived from artifact/results/current-native/derived; do not edit by hand.\n'
     macros+=''.join('\\newcommand{\\'+k+'}{'+v+'}\n' for k,v in macro.items())
-    table=('\\begin{table}[t]\n\\caption{Three-valued outcomes of the current checksum-locality protocol. An inadmissible case contributes to the attempted denominator but never to a fault-exposure numerator.}\n'
+    table=('\\begin{table}[t]\n\\caption{Checksum-locality outcomes by configuration.}\n'
            '\\label{tab:admission-overview}\n\\small\n\\begin{tabularx}{\\textwidth}{@{}X r r r r@{}}\n\\toprule\nSurface & Attempted & Satisfied & Inconsistent & Inadmissible \\\\\n\\midrule\n')
     rows=[['Clean',n(summary['clean_rows']),n(summary['clean']['SATISFIED']),0,0],
           ['Stage isolation',macro['EvidenceStageIsolationRows'],macro['EvidenceStageIsolationRows'],0,0],
