@@ -6,42 +6,50 @@ from diagram_ink import Diagram, S, T, A, G
 
 def intervention_loci():
     d=Diagram(420,100)
-    steps=((41,'Build','code'),(151,'Transform','patch'),(266,'Extract','lens'),(380,'Verdict','trace'))
-    for x,label,kind in steps:
-        d.mark(kind,x,54,22,S)
-        d.txt(x,80,label,9.6)
-    for a,b in zip(steps,steps[1:]):
-        d.wire((a[0]+15,54),(b[0]-16,54),c=S)
-    for x,label in ((41,'Compiler / payload'),(151,'Utility / integrity'),(266,'Extraction / rejection')):
-        d.wire((x,30),(x,40),c=A,dash=True)
-        d.txt(x,16,label,9.2,color=A)
-    d.txt(380,17,'Observed only',9.2,color=G)
+    for x,lab,k in ((46,'Build','code'),(146,'Transform','patch'),
+                    (246,'Extract','lens'),(351,'Verdict','trace')):
+        d.mark(k,x,57,19,S)
+        d.txt(x,78,lab,9.4)
+    for x,x2 in ((46,146),(146,246),(246,351)):
+        d.wire((x+13,57),(x2-15,57),c=S)
+    for x,lab in ((46,'Compiler / payload'),(146,'Utility / integrity'),(246,'Extraction / rejection')):
+        d.txt(x,19,lab,8.9,color=A)
+        d.wire((x,30),(x,43),c=A,dash=True)
+    d.txt(351,19,'Read only',8.8,color=G)
     return d
 
 def utility_observations():
+    from matplotlib.patches import Rectangle
     path=Path(__file__).resolve().parents[1]/'results/external_transformations_observation_scopes.summary.json'
     data=json.loads(path.read_text(encoding='utf-8'))
     with (path.parents[1]/data['source_matrix']).open(encoding='utf-8',newline='') as stream:
         rows=list(csv.DictReader(stream))
-    assert len(rows)==data['rows']
-    assert sum(r['pass']=='True' and r['host_outputs_equal']=='True' for r in rows)==data['preservation_verified_rows']
-    assert sum(r['pass']=='True' and r['expected']=='reject' and r['observed']=='reject' for r in rows)==data['rejection_only_rows']
-    assert sum(r['pass']=='False' for r in rows)==data['incompatible_rows']
-    groups=((85,'Preservation',data['preservation_verified_rows'],T,'trace','Host output compared'),
-            (52,'Rejection only',data['rejection_only_rows'],S,'doc','No host comparison'),
-            (19,'Incompatible',data['incompatible_rows'],A,'reject','No supported result'))
-    assert sum(g[2] for g in groups)==data['rows']
+    counts=(
+        sum(r['pass']=='True' and r['host_outputs_equal']=='True' for r in rows),
+        sum(r['pass']=='True' and r['expected']=='reject' and r['observed']=='reject' for r in rows),
+        sum(r['pass']=='False' for r in rows),
+    )
+    total=len(rows)
+    assert total==sum(counts)==data['rows']==378
+    assert counts==tuple(data[k] for k in
+                         ('preservation_verified_rows','rejection_only_rows','incompatible_rows'))
     d=Diagram(420,104)
-    d.mark('array',29,52,23,S)
-    d.txt(32,25,f"{data['rows']} rows",9.6)
-    d.wire((45,52),(86,52),c=G,arrow=False)
-    d.dotmark(86,52,1.7,c=G,fill=G)
-    for y,label,n,color,kind,meaning in groups:
-        d.wire((86,52),(86,y),(115,y),c=color)
-        d.txt(126,y,f'{n}  {label}',9.7,ha='left',color=color)
-        d.wire((219,y),(251,y),c=color,dash=kind=='reject')
-        d.mark(kind,262,y,15,color)
-        d.txt(274,y,meaning,9.7,ha='left')
+    d.txt(11,90,f'{total} utility-matrix rows',9.7,ha='left',bold=True)
+    origin,end=11,373
+    edge=origin
+    for i,(n,c,fill,hatch) in enumerate(zip(counts,(T,S,A),('#dceee8','#e3ecf3','#f6e8dd'),('','///','...'))):
+        w=(end-origin)*n/total
+        d.ax.add_patch(Rectangle((edge,59),w,16,facecolor=fill,edgecolor=c,
+                                 linewidth=.75,hatch=hatch,zorder=3))
+        center=edge+w/2
+        label_x=(95,232,330)[i]
+        y=(45,45,45)[i]
+        d.wire((center,57),(center,52),(label_x,52),(label_x,49),
+               c=c,lw=.65,arrow=False)
+        d.txt(label_x,y,f'{n} {["preservation","rejection only","incompatible"][i]}',9.3,color=c)
+        d.txt(label_x,21,["Host output compared","No host comparison","No supported result"][i],
+              8.8,color=G)
+        edge+=w
     return d
 
 FIGURES={'intervention-loci':intervention_loci,'utility-observations':utility_observations}

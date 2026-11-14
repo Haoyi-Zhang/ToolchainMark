@@ -106,6 +106,26 @@ class MatrixInputContractTests(unittest.TestCase):
 
 
 class PaperBuildPreflightTests(unittest.TestCase):
+    def test_build_copies_every_manuscript_figure_from_producer(self):
+        import re
+        paper = ROOT.parent / 'paper'
+        source = '\n'.join((paper / name).read_text(encoding='utf8')
+                           for name in ('main.tex','online-supplement.tex'))
+        for name in re.findall(r'\\input\s*\{(figures/[^{}]+)\}',source):
+            wrapper = paper / name
+            source += '\n' + (wrapper if wrapper.suffix else wrapper.with_suffix('.tex')).read_text(encoding='utf8')
+        recipe = (paper / 'build.sh').read_text(encoding='utf8').replace('\\\n', ' ')
+        matcher = r'\\includegraphics\s*(?:\[[^\]]*\])?\s*\{figures/([^{}]+)\.pdf\}'
+        manuscript = set(re.findall(matcher, source))
+        copied = re.search(r'(?m)^for figure in (.+); do$',recipe)
+        self.assertIsNotNone(copied)
+        self.assertTrue(manuscript)
+        actual = set(copied[1].split())
+        self.assertTrue(manuscript <= actual, manuscript - actual)
+        expected = {f.stem for f in (paper/'figures').glob('*.pdf')
+                    if (ROOT/'figures'/f.name).is_file()}
+        self.assertEqual(actual, expected)
+
     def test_missing_plotting_dependency_precedes_all_writes(self):
         build=(ROOT.parent/'paper/build.sh').read_text(encoding='utf-8')
         block=build.split("<<'PYDEPEND'\n",1)[1].split('\nPYDEPEND',1)[0]

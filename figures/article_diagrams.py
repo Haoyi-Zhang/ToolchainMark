@@ -4,199 +4,201 @@ from diagram_ink import Diagram,S,T,A,K,G,F,L,P,O
 
 def motivating_counterexample():
     d=Diagram(428,139)
-    for x,title,c in [(12,'(a) Artifact-bound extraction',T),(218,'(b) Sidecar substitution',A)]:
-        d.tag(x,126,title)
-        d.mark('code',x+29,64,23,S)
-        d.txt(x+29,42,'Artifact',9.3)
-        d.mark('lens',x+103,64,19,c)
-        d.txt(x+103,42,'Extractor',9.3)
-        d.wire((x+117,64),(x+159,64),c=c)
-        d.dotmark(x+170,64,7,c=c)
-        d.node_label(x+170,64,r'$p$',9.9,color=c)
-        if c==T:
-            d.wire((x+45,64),(x+90,64),c=T)
-            d.txt(x+68,76,'Reads carrier',8.8,color=T)
-        else:
-            d.mark('doc',x+29,101,18,A)
-            d.txt(x+45,101,'Sidecar',8.9,ha='left',color=A)
-            d.wire((x+29,90),(x+29,82),(x+103,82),(x+103,75),c=A,dash=True)
-            d.wire((x+45,64),(x+74,64),c=F,arrow=False,dash=True)
-            d.mark('reject',x+80,64,13,A)
-        d.mark('check' if c==T else 'reject',x+41,16,16,c)
-        d.txt(x+55,16,'Bound to artifact' if c==T else 'Binding violated',9.3,ha='left',color=c)
+    d.tag(12,126,'Paired extraction traces')
+    d.tag(216,126,'Contract-aware validation')
+    d.txt(245,103,'Clean relocation',9.1,color=T)
+    d.txt(319,101,'Admit pair?',8.6,bold=True,color=G)
+    for y,lab,kind,c in ((77,'Carrier','code',T),(46,'Sidecar','doc',A)):
+        d.mark(kind,22,y,19,c)
+        d.txt(35,y,lab,9.2,ha='left',color=c)
+        d.wire((71,y),(92,y),c=c,dash=y==46)
+        d.block(96,y-8,101,16,c,'white')
+        d.node_label(147,y,r'$p$',10.1,color=c)
+        d.wire((200,y),(217,y),c=c)
+        d.txt(248,y,r'$p\to p$' if y==77 else r'$p\to\bot$',10.3,color=c)
+        d.wire((272,y),(310,y),c=c)
+        d.diamond(319,y,6,G)
+        d.wire((327,y),(341,y),c=c)
+        d.mark('check' if y==77 else 'reject',353,y,13,c)
+        d.txt(364,y,'Satisfied' if y==77 else 'Inconsistent',9.2,ha='left',color=c)
+    d.txt(147,102,'Original extraction',9.1)
+    d.txt(147,20,'Round trip: both pass',9.0,color=G)
+    d.txt(245,25,'Artifact only',8.2,color=G)
+    d.txt(245,13,'Same host result',8.2,color=G)
+    # Each comparison independently reaches the admission decision.
+    d.txt(345,88,'Yes',7.6,color=G)
+    d.wire((319,69),(319,61),(331,61),c=A,dash=True)
+    d.txt(336,61,'No: withhold verdict',8.1,ha='left',color=A)
+    d.wire((319,38),(319,16),(331,16),c=A,dash=True)
+    d.txt(336,16,'No: withhold verdict',8.1,ha='left',color=A)
     return d
 
 
 def trace_model():
     d=Diagram(428,133)
-    stages=[(92,'Embed','code'),(146,'Compile','array'),(200,'Transform','patch'),
-            (254,'Execute','trace'),(308,'Extract','lens')]
-    for x,t,k in stages:d.txt(x,120,t,9.7)
-    for y,proj,lab,obs,c in [(100,81,r'$\tau_s$',r'$O_R(\tau_s)$',S),
-                             (51,27,r'$\tau_f$',r'$O_R(\tau_f)$',T)]:
-        d.txt(24,y,lab,11,color=c)
-        d.wire((36,y),(79,y),c=c)
-        for (x,_,_),(x2,_,_) in zip(stages,stages[1:]):
-            d.wire((x+11,y),(x2-12,y),c=c)
-        for x,t,k in stages:d.mark(k,x,y,17,c)
-        d.wire((318,y),(337,y),c=c,arrow=False)
-        # A tap stays inside its own trace's projection path.
-        for x in (164,337):
-            d.dotmark(x,y,1.7,c=c,fill=c)
-            d.wire((x,y-3),(x,proj),c=c,dash=True,arrow=False)
-        d.wire((164,proj),(360,proj),c=c,dash=True)
-        d.dotmark(337,proj,1.65,c=c,fill=c)
-        d.node_label(388,proj,obs,9.9,color=c)
-    d.wire((388,73),(388,64),c=S)
-    d.wire((388,35),(388,44),c=T)
-    d.dotmark(388,54,8,c=G)
-    d.node_label(388,54,r'$R$',10,color=G)
-    d.wire((24,12),(45,12),c=G,dash=True,arrow=False)
-    d.txt(52,12,'Observation tap',8.8,ha='left',color=G)
+    d.tag(12,121,'Two trace records')
+    d.tag(241,121,'Payload projection')
+    for x,label in ((82,'Build'),(121,'Artifact'),(160,'Host'),(199,'Extract')):
+        d.txt(x,105,label,8.9,color=G)
+    for y,t,c in ((81,'s',S),(40,'f',T)):
+        d.txt(29,y,rf'$\tau_{t}$',11,color=c)
+        for x,l in ((82,r'$\widehat{\theta}$'),(121,r'$a$'),(160,r'$\sigma$'),(199,r'$\rho$')):
+            d.block(x-15,y-8,30,16,c if x==199 else F,'white')
+            d.node_label(x,y,l,10,color=c if x==199 else G)
+        d.wire((216,y),(244,y),c=c)
+        d.txt(266,y,rf'$\rho_{t}$',10.3,color=c)
+        d.wire((281,y),(314,y),(337,61),c=c,arrow=False)
+    d.dotmark(344,61,7,c=G)
+    d.node_label(344,61,r'$R$',9.8)
+    d.txt(361,61,'Compare',9.2,ha='left')
     return d
 
 
 def architecture():
-    d=Diagram(428,134)
-    y=77
-    for x,kind,label in ((25,'trace',r'Source $\tau_s$'),
-                         (135,'trace',r'Follow-up $\tau_f$'),
-                         (250,'array',r'Project $O_R$')):
-        d.mark(kind,x,y,23,S if x<200 else T)
-        d.txt(x,101,label,9.7)
-    for x,lab in ((78,r'Applicability $A_R$'),(194,r'Intervention $E_R$'),(306,r'Predicate $\varphi_R$')):
-        d.diamond(x,y,6.6,S if x<200 else T)
-        d.txt(x,54 if x<200 else 104,lab,9.3)
-    for a,b in ((37,68),(88,123),(147,184),(204,237),(263,296)):
-        d.wire((a,y),(b,y),c=S if b<200 else T)
-    for yy,c,k,lab in ((103,T,'check','Satisfied'),(56,A,'trace','Inconsistent')):
-        d.wire((315,y),(339,yy),(352,yy),c=c)
-        d.mark(k,362,yy,17,c)
-        d.txt(373,yy,lab,9.3,ha='left',color=c)
-    for x,edge in ((78,40),(194,239)):
-        d.wire((x,67),(x,64),(edge,64),(edge,28),c=G,dash=True,arrow=False)
-    d.wire((40,28),(338,28),c=G,dash=True)
-    d.dotmark(239,28,1.7,c=G,fill=G)
-    d.mark('reject',348,28,17,G)
-    d.txt(360,28,'Inadmissible',9.4,ha='left',color=G)
+    d=Diagram(426,140)
+    d.mark('trace',26,88,16,S)
+    d.txt(26,66,r'$\tau_s$',10,color=S)
+    d.wire((37,88),(68,88),c=S)
+    for x,label in ((75,'Applicable'),(186,'Intervention'),(268,'Observations')):
+        d.diamond(x,88,5.5,T)
+        d.txt(x,113,label,9.1)
+        d.wire((x,81),(x,31),c=A,dash=True,arrow=False)
+        d.dotmark(x,31,1.4,c=A,fill=A)
+    d.wire((82,88),(102,88),c=T)
+    d.mark('trace',121,88,16,T)
+    d.txt(121,66,r'Follow-up $\tau_f$',9.1,color=T)
+    d.wire((132,88),(178,88),c=T)
+    d.wire((194,88),(260,88),c=T)
+    d.txt(226,101,r'$E_R(\tau_s,\tau_f)$',8.9,color=G)
+    d.wire((276,88),(307,88),c=T)
+    d.dotmark(316,88,7,c=T)
+    d.node_label(316,88,r'$\varphi_R$',9.0,color=T)
+    d.txt(316,61,r'Polarity $\pi_R$',8.9,color=G)
+    for y,lab,k,c in ((105,'Satisfied','check',T),(76,'Inconsistent','reject',A)):
+        d.wire((325,88),(345,y),c=c)
+        d.mark(k,356,y,11,c)
+        d.txt(367,y,lab,8.9,ha='left',color=c)
+    d.wire((75,31),(306,31),c=A,dash=True)
+    d.mark('reject',316,31,11,A)
+    d.txt(330,31,'Inadmissible',9.0,ha='left',color=A)
+    d.txt(75,17,'Not applicable',8.3,color=A)
+    d.txt(186,17,'Not established',8.3,color=A)
+    d.txt(268,17,'Missing',8.3,color=A)
     return d
 
 
 def evaluation_design():
     d=Diagram(428,137)
-    for x,title in [(9,'Comparison'),(119,'Select on'),(232,'Evaluate on'),(346,'Keep fixed')]:
-        d.txt(x,124,title,9.6,ha='left',bold=True)
-    rows=[
-        (91,'Subject replay','doc','1 design subject','array','17 other subjects','Carrier + operator',T,False),
-        (58,'Carrier holdout','array','2 carriers','array','Excluded carrier','All 24 operators',A,True),
-        (25,'Mechanism holdout','patch',r'$M\setminus H$','patch',r'Omitted $H$','All 3 carriers',A,True),
-    ]
-    for y,lab,kind,selection,kind2,evaluation,control,color,holdout in rows:
-        d.txt(9,y,lab,9.5,ha='left')
-        d.mark(kind,115,y,14,S)
-        d.txt(126,y,selection,9.2,ha='left',color=S)
-        d.wire((198,y),(216,y),c=color,dash=holdout,lw=1.0)
-        d.mark(kind2,226,y,14,color)
-        d.txt(237,y,evaluation,9.2,ha='left',color=color)
-        d.txt(346,y,control,9.0,ha='left',color=G)
-    # Label the arrow column, not just the first arrow.
-    d.node_label(207,124,'Suite',8.8,color=G)
+    d.tag(10,124,'Design subject')
+    d.tag(174,124,'Replayed or held-out evidence')
+    d.txt(12,100,'Replay',9.3,ha='left',bold=True)
+    d.mark('array',84,100,14,S)
+    d.wire((97,100),(164,100),c=S)
+    d.mark('array',179,100,14,S)
+    d.txt(195,100,'Same carrier and mechanism',9.1,ha='left')
+    d.txt(412,100,'17 other subjects',9.0,ha='right',color=S)
+    for y,left,labels,right,n in (
+            (65,'Carrier',('1','2','3'),'Third carrier','18 subjects'),
+            (32,'Class',('',r'$\ldots$','H'),'Held-out class','17 other subjects')):
+        d.txt(12,y,left,9.3,ha='left',bold=True)
+        for i,(x,l) in enumerate(zip((73,92,111),labels)):
+            d.block(x-8,y-7,16,14,A if i==2 else T,'white' if i==2 else P)
+            if l:
+                d.node_label(x,y,l,8.6,color=A if i==2 else T)
+        d.wire((121,y),(166,y),c=A,dash=True)
+        d.block(172,y-7,15,14,A,'white')
+        d.node_label(179.5,y,labels[-1],8.6,color=A)
+        d.txt(195,y,right,9.1,ha='left')
+        d.txt(412,y,n,9.0,ha='right',color=A)
+    d.block(79,10,10,7,T,P)
+    d.txt(94,13,'Selection pool',8.5,ha='left',color=T)
+    d.block(169,10,10,7,A,'white')
+    d.txt(184,13,'Held out',8.5,ha='left',color=A)
     return d
 
 
 def snapshot_coherence():
-    d=Diagram(428,125)
-    d.mark('keyed',35,93,22,S)
-    d.txt(35,112,r'Capture $F$',9.4)
-    d.wire((50,93),(84,93),c=S)
-    d.mark('vector',96,93,17,S)
-    d.txt(111,93,'Integrity evidence',9.3,ha='left')
-    d.wire((202,93),(293,93),c=S)
-    for y,lab in ((61,'Live before test'),(28,'Live after test')):
-        d.mark('doc',96,y,16,S)
-        d.txt(111,y,lab,9.3,ha='left')
-        d.wire((183,y),(200,y),(218,44),c=S,arrow=False)
-    d.dotmark(218,44,2,c=S,fill=S)
-    d.wire((222,44),(242,44),c=S)
-    d.diamond(250,44,5.5,T)
-    d.txt(250,61,r'Both $=F$?',9.3,color=T)
-    d.wire((257,44),(304,44),(304,82),c=T)
-    d.txt(280,54,'Yes',8.8,color=T)
-    d.diamond(304,93,7,T)
-    d.node_label(304,93,r'$\wedge$',8.7,color=T)
-    d.wire((313,93),(351,93),c=T)
-    d.txt(361,93,'Predicate',9.3,ha='left')
-    d.wire((250,36),(250,13),(346,13),c=A,dash=True)
-    d.txt(271,24,'No',8.8,color=A)
-    d.mark('reject',357,13,15,A)
-    d.txt(369,13,'Withhold',9.3,ha='left',color=A)
+    d=Diagram(428,117)
+    d.mark('keyed',152,99,17,S)
+    d.txt(169,99,r'Snapshot $F$',9.2,ha='left',color=S)
+    for x,label in ((86,'Before: live = F?'),(228,'After: live = F?')):
+        d.diamond(x,60,5.7,S)
+        d.txt(x-12 if x<150 else x+12,86,label,8.9)
+        d.wire((151,89),(x,68),c=S,dash=True)
+        d.wire((x,53),(x,24),(132 if x<150 else 192,24),c=A,dash=True,arrow=False)
+    d.wire((132,24),(153,24),c=A,dash=True,arrow=False)
+    d.wire((192,24),(170,24),c=A,dash=True,arrow=False)
+    d.mark('reject',161,24,11,A)
+    d.txt(161,9,'Either differs: withhold verdict',8.9,color=A)
+    d.txt(13,60,'Live set',9.1,ha='left')
+    d.wire((52,60),(78,60),c=G)
+    d.wire((94,60),(134,60),c=T)
+    d.mark('lens',149,60,19,T)
+    d.txt(149,40,'Extract',9.2,color=T)
+    d.wire((162,60),(220,60),c=T)
+    d.wire((236,60),(279,60),c=T)
+    d.mark('check',293,60,16,T)
+    d.txt(307,60,'Compare predicate',9.2,ha='left',color=T)
     return d
 
 
 def rejection_taxonomy():
     d=Diagram(420,69)
-    d.mark('trace',24,33,22,S)
-    d.txt(43,33,'Observation',9.3,ha='left')
-    d.wire((108,33),(147,33),c=S)
-    d.diamond(154,33,6,S)
-    for y,c,k,t,outcome in [(52,T,'doc','Typed response','Test relation'),
-                             (14,A,'reject','Missing run data','Inadmissible')]:
-        d.wire((163,33),(184,y),(211,y),c=c,dash=c==A)
-        d.mark(k,221,y,16,c)
-        d.txt(235,y,t,9.2,ha='left')
-        d.wire((326,y),(345,y),c=c,dash=c==A)
-        d.txt(353,y,outcome,9.2,ha='left',color=c)
+    d.mark('trace',26,36,20,S)
+    d.txt(44,36,'Run',9.3,ha='left')
+    d.wire((67,36),(102,36),c=S)
+    d.diamond(109,36,5.2,S)
+    for y,c,k,t,outcome,glyph in ((52,T,'doc','Typed response','Test relation','graph'),
+                                  (15,A,'reject','Missing run data','Inadmissible','reject')):
+        d.wire((116,36),(140,y),(174,y),c=c,dash=y==15)
+        d.mark(k,185,y,15,c)
+        d.txt(201,y,t,9.2,ha='left')
+        d.wire((281,y),(308,y),c=c,dash=y==15)
+        d.mark(glyph,319,y,13,c)
+        d.txt(332,y,outcome,9.2,ha='left',color=c)
     return d
 
 
 def removal_gates():
-    d=Diagram(420,63)
-    y=38
-    source,admit,remove,observe,compare=21,79,145,211,277
-    d.mark('code',source,y,20,S)
-    d.txt(source,18,'Source',9.1,color=S)
-    d.mark('patch',remove,y,18,S)
-    d.txt(remove,55,'Remove',9.1,color=S)
-    for x,label,color in ((admit,'Source gate',S), (observe,'Removal gate',S),
-                          (compare,'Compare',T)):
-        d.diamond(x,y,5.5,color)
-        d.txt(x,55,label,9.1,color=color)
-    for start,end in ((source+13,admit-8),(admit+8,remove-12),
-                      (remove+12,observe-8),(observe+8,compare-8)):
-        d.wire((start,y),(end,y),c=S)
-
-    for target,color,mark,label in ((49,T,'check','Same: satisfied'),
-                                   (28,A,'reject','Other: inconsistent')):
-        d.wire((compare+8,y),(297,target),(303,target),c=color)
-        d.mark(mark,313,target,13,color)
-        d.txt(325,target,label,9.1,ha='left',color=color)
-
-    rail=9
-    d.wire((admit,y-8),(admit,rail),(compare,rail),c=G,dash=True,arrow=False)
-    for x in (observe,compare):
-        d.wire((x,y-8),(x,rail),c=G,dash=True,arrow=False)
-        d.dotmark(x,rail,1.5,c=G,fill=G)
-    d.wire((compare+3,rail),(303,rail),c=G,dash=True)
-    d.mark('lock',313,rail,12,G)
-    d.txt(325,rail,'Inadmissible',9.1,ha='left',color=G)
+    d=Diagram(420,106)
+    d.mark('patch',23,61,16,S)
+    d.wire((35,61),(72,61),c=S)
+    d.diamond(79,61,5.3,S)
+    d.txt(70,82,'Verified removal',9.0)
+    d.wire((86,61),(142,61),c=T)
+    d.diamond(149,61,5.3,T)
+    d.txt(160,82,'Observed outcome',9.0)
+    d.wire((79,54),(79,13),(190,13),c=G,dash=True,arrow=False)
+    d.wire((149,54),(149,13),c=G,dash=True,arrow=False)
+    d.dotmark(149,13,1.7,c=G,fill=G)
+    d.wire((190,13),(224,13),c=G,dash=True)
+    d.txt(70,31,'Not verified',8.1,ha='right',color=G)
+    d.txt(157,27,'Unavailable',8.1,ha='left',color=G)
+    d.txt(233,13,'Inadmissible',9.1,ha='left',color=G)
+    for y,lab,k,out,c in ((61,'Expected rejection','check','Satisfied',T),
+                           (39,'Other observed result','reject','Inconsistent',A)):
+        d.wire((156,61),(178,y),(187,y),c=c,arrow=False)
+        d.txt(197,y,lab,9,ha='left',color=c)
+        d.wire((285,y),(308,y),c=c)
+        d.mark(k,320,y,12,c)
+        d.txt(333,y,out,9.1,ha='left',color=c)
     return d
 
 
 def carrier_locations():
     d=Diagram(420,39)
-    for x,title,kind,c in [(13,'Generated source','code',S),
-                            (150,'Exported names','symbol',T),
-                            (285,'ELF sections','array',A)]:
+    for x,title,kind,c in [(16,'Source byte array','code',S),
+                            (152,'Exported name','symbol',T),
+                            (286,'ELF section','array',A)]:
         d.mark(kind,x+8,27,13,c)
         d.txt(x+21,27,title,9.1,ha='left',bold=True)
-    for x,segments,selected,c in [
-        (10,(31,59,19),1,S),(150,(29,59,20),1,T),(285,(27,64,21),1,A)]:
-        for j,w in enumerate(segments):
-            at=x+sum(segments[:j])
-            d.block(at,3,w,13,c if j==selected else F,
-                    {S:L,T:P,A:O}[c] if j==selected else 'white')
-    for x,label,c in [(70.5,'Payload bytes',S),(208.5,'Name payload',T),(344,'RO section',A)]:
-        d.node_label(x,9.5,label,8.45,color=c)
+    d.txt(22,10,r'$\{\ b_0,\ b_1,\ \ldots\ \}$',9.6,ha='left',color=S)
+    d.txt(160,10,r'$\mathrm{name}(i,p_i)$',9.6,ha='left',color=T)
+    d.block(296,4,42,12,F,'white')
+    d.node_label(317,10,'Header',8.4,color=G)
+    d.wire((340,10),(355,10),c=A)
+    d.block(361,4,37,12,A,O)
+    d.node_label(379,10,'Bytes',8.4,color=A)
     return d
 
 

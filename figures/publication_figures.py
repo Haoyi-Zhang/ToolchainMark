@@ -149,10 +149,13 @@ def sensitivity(out,preview):
     a.text(1.25,1.052,'Exposed\n/ planned',transform=a.transAxes,
            ha='center',va='bottom',fontsize=8.4,linespacing=1.02,color=MUTED)
     a.spines['left'].set_visible(False)
+    a.axvline(100,color=MUTED,lw=.6,ls='--',zorder=1)
     for y,row in zip((4,3,2,1),fixed):
         v=float(100*value(row))
-        a.hlines(y,0,v,color=TEAL,lw=.72,alpha=.67)
-        a.plot(v,y,'o',color=BLUE,ms=4.1,zorder=3)
+        a.hlines(y,0,v,color=TEAL,lw=.78,zorder=2)
+        a.hlines(y,v,100,color=RULE,lw=.6,zorder=1)
+        a.plot(v,y,'D' if y==1 else 'o',mfc='white' if y==1 else BLUE,
+               mec=BLUE,mew=.9,ms=4.5 if y==1 else 3.8,zorder=3)
         a.text(1.25,y,label(row),transform=a.get_yaxis_transform(),
                ha='center',va='center',fontsize=9.1,color=INK)
     a.set(xlim=(-3,103),yticks=(1,2,3,4),yticklabels=[r['label'] for r in fixed[::-1]],
@@ -192,7 +195,6 @@ def clause_coverage(out,preview):
     d.text(237,98,r'Relation $R_1$',9.6,weight='bold')
     d.text(316,98,r'Relation $R_2$',9.6,weight='bold')
     d.text(408,98,'Domain',9.6,ha='right',weight='bold')
-    d.rule(8,89,412,89,c=RULE,lw=.65)
     for y,label,hits,group in ((75,'Both clauses',(True,True),'Observed'),
                               (49,'Only clause 1',(True,False),'Possible'),
                               (26,'Only clause 2',(False,True),'Possible')):
